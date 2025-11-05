@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "327931200371",
+    "project_id": "vernoxy-db",
+    "storage_bucket": "vernoxy-db.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:327931200371:android:e7c01aac67fa82bc3abb06",
+        "android_client_info": {
+          "package_name": "com.vernoxydb"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzkMR7ocp2y2TInnhGmMR68AuWF-Vy45Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:327931200371:android:d224180873fc85703abb06",
+        "android_client_info": {
+          "package_name": "vernoxy.db"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAzkMR7ocp2y2TInnhGmMR68AuWF-Vy45Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
