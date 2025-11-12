@@ -16,16 +16,20 @@
 import React, { useEffect } from "react";
 import { Alert } from "react-native";
 import StackNavigation from "./src/navigation/StackNavigation";
-import app from "@react-native-firebase/app";
+import { firebase } from "@react-native-firebase/app"; // ✅ FIXED import
 
 const App = () => {
   useEffect(() => {
-    const config = app().options;
-    console.log("🔥 Firebase Config:", config);
-    Alert.alert("Firebase Project ID", config.projectId || "No projectId found");
+    try {
+      const config = firebase.app().options; // ✅ FIXED usage
+       } catch (error) {
+      console.error("Error reading Firebase config:", error);
+      Alert.alert("Error", error.message);
+    }
   }, []);
 
   return <StackNavigation />;
 };
 
 export default App;
+
