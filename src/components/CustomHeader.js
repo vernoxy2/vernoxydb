@@ -132,7 +132,7 @@ export default CustomHeader;
 const styles = StyleSheet.create({
   loginTopContainer: {
     height: '25%',
-    backgroundColor: '#3668B1',
+    backgroundColor: '#125D9F',
     borderBottomLeftRadius: 40,
     borderBottomRightRadius: 40,
     alignItems: 'center',

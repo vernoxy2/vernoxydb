@@ -88,31 +88,6 @@ const AdminJobDetailsScreen = ({route, navigation}) => {
     }
   };
 
-  // const openPDFWithIntentLauncher = async filePath => {
-  //   if (Platform.OS === 'android') {
-  //     try {
-  //       await IntentLauncher.startActivity({
-  //         action: 'android.intent.action.VIEW',
-  //         data: `file://${filePath}`,
-  //         type: 'application/pdf',
-  //         flags: 1, // FLAG_GRANT_READ_URI_PERMISSION
-  //       });
-  //       console.log('PDF opened with IntentLauncher');
-  //     } catch (err) {
-  //       console.error('IntentLauncher error:', err);
-  //       Alert.alert(
-  //         'Error Opening PDF',
-  //         'No app found to open PDF files. Please install a PDF viewer.',
-  //       );
-  //     }
-  //   } else {
-  //     Alert.alert(
-  //       'Not Supported',
-  //       'Opening PDFs via IntentLauncher is currently only supported on Android.',
-  //     );
-  //   }
-  // };
-
   const generatePDF = async () => {
     try {
       const hasPermission = await requestStoragePermission();
@@ -145,50 +120,20 @@ const AdminJobDetailsScreen = ({route, navigation}) => {
         ? formatTimestamp(order.updatedByPrintingAt)
         : '';
 
-      const punchingStartTimeFormatted = order.punchingStartAt
-        ? formatTimestamp(order.punchingStartAt)
-        : '';
-
-      const punchingEndTimeFormatted = order.updatedByPunchingAt
-        ? formatTimestamp(order.updatedByPunchingAt)
-        : '';
-
-      const slittingStartTimeFormatted = order.startBySlittingAt
-        ? formatTimestamp(order.startBySlittingAt)
-        : '';
-
-      const slittingEndTimeFormatted = order.updatedBySlittingAt
-        ? formatTimestamp(order.updatedBySlittingAt)
-        : '';
-
-      const slittingRows =
-        order.slittingData && order.slittingData.length > 0
-          ? order.slittingData
-              .map(
-                item => `
-              <tr>
-                <td>${item.A || ''}</td>
-                <td>${item.B || ''}</td>
-                <td>${item.C || ''}</td>
-              </tr>`,
-              )
-              .join('')
-          : `<tr><td colspan="3">No data available</td></tr>`;
-
       const htmlContent = `
       <html>
       <head>
           <style>
           body { font-family: Arial, sans-serif; }
-          h1 { text-align: center; color: #3668B1; }
-          .section { border: 2px solid #3668B1; border-radius: 8px; margin-bottom: 18px; padding: 10px 15px; }
-          .section-title { background: #3668B1; color: #fff; font-weight: bold; padding: 3px 10px; border-radius: 5px; display: inline-block; margin-bottom: 10px; }
+          h1 { text-align: center; color: #125D9F; }
+          .section { border: 2px solid #125D9F; border-radius: 8px; margin-bottom: 18px; padding: 10px 15px; }
+          .section-title { background: #125D9F; color: #fff; font-weight: bold; padding: 3px 10px; border-radius: 5px; display: inline-block; margin-bottom: 10px; }
           .row { display: flex; flex-wrap: wrap; margin-bottom: 8px; }
           .col { flex: 1; min-width: 180px; margin-right: 10px; }
           .label { font-weight: bold; }
           .input { display: inline-block; min-width: 120px; } /* 🧹 removed underline */
           table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-          th, td { border: 1px solid #3668B1; padding: 4px 8px; text-align: center; }
+          th, td { border: 1px solid #125D9F; padding: 4px 8px; text-align: center; }
           .small-table td { min-width: 40px; }
           .color-seq-table { margin-bottom: 15px; }
           .time-row {
@@ -217,16 +162,17 @@ const AdminJobDetailsScreen = ({route, navigation}) => {
                 <div class="col"><span class="label">PO No.:</span> <span class="input">${
                   order.poNo || ''
                 }</span></div>
+
+                <div class="col"><span class="label">PO No.:</span> <span class="input">${
+                  order.quotationNo || ''
+                }</span></div>
+
                 <div class="col"><span class="label">Job Date:</span> <span class="input">${jobDateFormatted}</span></div>
           </div>
           <div class="row">
                 <div class="col"><span class="label">Customer Name:</span> <span class="input">${
                   order.customerName || ''
-                }</span></div>
-                  <div class="col"><span class="label">Label Type:</span> <span class="input">${
-                    order.jobType || ''
-                  }</span></div>
-              
+                }</span></div>                                
           </div>
           <div class="row">
                 <div class="col"><span class="label">Job Card no:</span> <span class="input">${
@@ -236,10 +182,7 @@ const AdminJobDetailsScreen = ({route, navigation}) => {
                   order.jobName || ''
                 }</span></div>
           </div>
-          <div class="row">
-              <div class="col"><span class="label">Job Original Size:</span> <span class="input">${
-                order.jobSize || ''
-              }</span></div>
+          <div class="row">              
               <div class="col"><span class="label">Job Qty:</span> <span class="input">${
                 order.jobQty || ''
               }</span></div>
@@ -315,54 +258,7 @@ const AdminJobDetailsScreen = ({route, navigation}) => {
                       </span>
                     </div>
                  </div>
-        </div>
-
-        <div class="section">
-          <div class="section-title">Punching</div>
-          <div class="row">
-            <div class="col"><span class="label">Punching Start Time:</span> <span class="input">${
-              punchingStartTimeFormatted || ''
-            }</span></div>
-            <div class="col"><span class="label">Punching End Time:</span> <span class="input">${
-              punchingEndTimeFormatted || ''
-            }</span></div>
-          </div>
-          <div class="row">
-            <div class="col"><span class="label">Paper Code:</span> <span class="input">${
-              order.paperCode || ''
-            }</span></div>
-            <div class="col"><span class="label">Running Mtrs:</span> <span class="input">${
-              order.runningMtr || ''
-            }</span></div>
-          </div>
-        </div>
-
-        <div class="section">
-          <div class="section-title">Slitting</div>
-          <div class="row">
-            <div class="col"><span class="label">Slitting Start Time:</span> <span class="input">${
-              slittingStartTimeFormatted || ''
-            }</span></div>
-            <div class="col"><span class="label">Slitting End Time:</span> <span class="input">${
-              slittingEndTimeFormatted || ''
-            }</span></div>
-          </div>
-          <div class="subsection">
-            <table border="1">
-              <thead>
-                <tr>
-                  <th>Labels</th>
-                  <th>No of Rolls</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${slittingRows}
-              </tbody>
-            </table>
-
-          </div>
-        </div>
+        </div>  
       </body>
       </html>
     `;
@@ -470,15 +366,15 @@ const AdminJobDetailsScreen = ({route, navigation}) => {
       <head>
           <style>
           body { font-family: Arial, sans-serif; }
-          h1 { text-align: center; color: #3668B1; }
-          .section { border: 2px solid #3668B1; border-radius: 8px; margin-bottom: 18px; padding: 10px 15px; }
-          .section-title { background: #3668B1; color: #fff; font-weight: bold; padding: 3px 10px; border-radius: 5px; display: inline-block; margin-bottom: 10px; }
+          h1 { text-align: center; color: #125D9F; }
+          .section { border: 2px solid #125D9F; border-radius: 8px; margin-bottom: 18px; padding: 10px 15px; }
+          .section-title { background: #125D9F; color: #fff; font-weight: bold; padding: 3px 10px; border-radius: 5px; display: inline-block; margin-bottom: 10px; }
           .row { display: flex; flex-wrap: wrap; margin-bottom: 8px; }
           .col { flex: 1; min-width: 180px; margin-right: 10px; }
           .label { font-weight: bold; }
           .input { display: inline-block; min-width: 120px; } /* 🧹 removed underline */
           table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-          th, td { border: 1px solid #3668B1; padding: 4px 8px; text-align: center; }
+          th, td { border: 1px solid #125D9F; padding: 4px 8px; text-align: center; }
           .small-table td { min-width: 40px; }
           .color-seq-table { margin-bottom: 15px; }
           .time-row {
@@ -874,7 +770,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: 10,
-    backgroundColor: '#3668B1',
+    backgroundColor: '#125D9F',
     marginVertical: 5,
     borderRadius: 5,
   },

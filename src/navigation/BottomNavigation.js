@@ -86,6 +86,9 @@ import AdminCreateOrder from '../screens/AdminCreateOrder';
 
 import homeIcon from '../assets/images/homeBottomImg.png';
 import profileIcon from '../assets/images/profileBottomImg.png';
+import NotificationScreen from '../screens/NotificationScreen';
+import User1HomeScreen from '../screens/User1HomeScreen';
+import User1JobDetailScreen from '../screens/User1JobDetailScreen';
 // import notificationIcon from '../assets/images/notificationBottomImg.png';
 
 const Tab = createBottomTabNavigator();
@@ -127,20 +130,22 @@ const SlittingStack = () => (
   </Stack.Navigator>
 );
 
+const userStack = () => (
+  <Stack.Navigator screenOptions={{headerShown: false}}>
+    <Stack.Screen name="User1HomeScreen" component={User1HomeScreen} />
+    <Stack.Screen
+      name="User1JobDetailsScreen"
+      component={User1JobDetailScreen}
+    />
+  </Stack.Navigator>
+);
+
 const BottomNavigation = ({route}) => {
   const role = route?.params?.role ?? 'Admin';
 
   // Select correct stack based on user role
   const HomeComponent =
-    role === 'Admin'
-      ? AdminStack
-      : role === 'Printing'
-      ? PrintingStack
-      : role === 'Punching'
-      ? PunchingStack
-      : role === 'Slitting'
-      ? SlittingStack
-      : AdminStack;
+    role === 'Admin' ? AdminStack : role === 'user' ? userStack : AdminStack;
 
   return (
     <Tab.Navigator
@@ -168,6 +173,7 @@ const BottomNavigation = ({route}) => {
         headerShown: false,
       })}>
       <Tab.Screen name="Home" component={HomeComponent} />
+      <Tab.Screen name="Notifications" component={NotificationScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

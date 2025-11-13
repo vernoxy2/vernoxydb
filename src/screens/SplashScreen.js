@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
   },
   SplashText: {
     fontSize: 30,
-    color: '#3668B1',
+    color: '#125D9F',
     fontWeight: 'bold',
     marginTop: 60,
     letterSpacing: 1.5,

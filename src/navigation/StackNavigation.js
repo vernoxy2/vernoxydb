@@ -16,6 +16,8 @@ import SlittingHomeScreen from '../screens/SlittingHomeScreen';
 import AdminJobDetailsScreen from '../screens/AdminJobDetailsScreen';
 import SlittingJobDetailsScreen from '../screens/SlittingJobDetailsScreen';
 import AuthLoadingScreen from '../screens/AuthLoadingScreen';
+import User1JobDetailScreen from '../screens/User1JobDetailScreen';
+import User1HomeScreen from '../screens/User1HomeScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -91,6 +93,16 @@ const StackNavigation = () => {
         <Stack.Screen
           name="AdminJobDetailsScreen"
           component={AdminJobDetailsScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="User1JobDetailsScreen"
+          component={User1JobDetailScreen}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="User1HomeScreen"
+          component={User1HomeScreen}
           options={{headerShown: false}}
         />
       </Stack.Navigator>

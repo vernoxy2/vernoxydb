@@ -17,7 +17,7 @@ import CustomHeader from '../components/CustomHeader';
 import SearchBar from '../components/SearchBar';
 import DatePicker from 'react-native-date-picker';
 
-const HomeScreen = ({navigation}) => {
+const User1HomeScreen = ({navigation}) => {
   const [jobData, setJobData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('allJobs');
@@ -290,7 +290,7 @@ const HomeScreen = ({navigation}) => {
   );
 };
 
-export default HomeScreen;
+export default User1HomeScreen;
 
 const styles = StyleSheet.create({
   // Your existing styles
