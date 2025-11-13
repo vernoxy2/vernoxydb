@@ -66,6 +66,7 @@ const HomeScreen = ({navigation}) => {
           (job.jobCardNo && job.jobCardNo.toLowerCase().includes(query)) ||
           (job.customerName &&
             job.customerName.toLowerCase().includes(query)) ||
+          (job.jobName && job.jobName.toLowerCase().includes(query)) ||
           (() => {
             if (!job.jobDate) return false;
             let jobDateObj;
@@ -119,19 +120,22 @@ const HomeScreen = ({navigation}) => {
   const renderHeader = () => (
     <View style={[styles.row, styles.header]}>
       <Text style={styles.cellHeading}>Job Card No</Text>
-      <Text style={styles.cellHeading}>Name</Text>
+      <Text style={styles.cellHeading}>Job Name</Text>
+      <Text style={styles.cellHeading}>Customer Name</Text>
       <Text style={styles.cellHeading}>Date</Text>
       <Text style={styles.cellHeading}>Status</Text>
+      <Text style={styles.cellHeading}>Action</Text>
     </View>
   );
 
   const renderItem = ({item}) => (
     <Pressable
-      // onPress={() =>
-      //   navigation.navigate('AdminJobDetailsScreen', {order: item})
-      // }
+      onPress={() =>
+        navigation.navigate('AdminJobDetailsScreen', {order: item})
+      }
       style={styles.row}>
       <Text style={styles.cell}>{item.jobCardNo}</Text>
+      <Text style={styles.cell}>{item.jobName}</Text>
       <Text style={styles.cell}>{item.customerName}</Text>
       <Text style={styles.cell}>
         {item.jobDate
@@ -149,6 +153,25 @@ const HomeScreen = ({navigation}) => {
         ]}>
         {item.jobStatus}
       </Text>
+      <View
+        style={[
+          styles.cell,
+          {width: 80, alignItems: 'center', justifyContent: 'center'},
+        ]}>
+        <Pressable
+          pointerEvents="box-only"
+          onStartShouldSetResponder={() => true}
+          onPress={e => {
+            e.stopPropagation();
+            navigation.navigate('AdminCreateOrder', {
+              id: item.id,
+              isEdit: true,
+            });
+          }}
+          style={styles.editButton}>
+          <Text style={styles.editText}>Edit</Text>
+        </Pressable>
+      </View>
     </Pressable>
   );
 
@@ -419,5 +442,27 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 14,
     fontFamily: 'Lato-Regular',
+  },
+  editButton: {
+    backgroundColor: '#3668B1',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 60,
+  },
+  editText: {
+    color: '#fff',
+    fontSize: 12,
+    fontFamily: 'Lato-Bold',
+  },
+  editButtonContainer: {
+    width: 80,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#3668B1', // ✅ visible color
+    paddingVertical: 8,
+    borderRadius: 6,
   },
 });

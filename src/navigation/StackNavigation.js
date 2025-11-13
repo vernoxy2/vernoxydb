@@ -96,7 +96,7 @@ const StackNavigation = () => {
           options={{headerShown: false}}
         />
         <Stack.Screen
-          name="User1JobDetailsScreen"
+          name="User1JobDetailScreen"
           component={User1JobDetailScreen}
           options={{headerShown: false}}
         />

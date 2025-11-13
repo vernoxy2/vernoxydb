@@ -11,6 +11,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Image,
+  Alert,
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import CustomHeader from '../components/CustomHeader';
@@ -119,7 +120,7 @@ const User1HomeScreen = ({navigation}) => {
   const renderHeader = () => (
     <View style={[styles.row, styles.header]}>
       <Text style={styles.cellHeading}>Job Card No</Text>
-      <Text style={styles.cellHeading}>Name</Text>
+      <Text style={styles.cellHeading}>Job Name</Text>
       <Text style={styles.cellHeading}>Date</Text>
       <Text style={styles.cellHeading}>Status</Text>
     </View>
@@ -127,12 +128,12 @@ const User1HomeScreen = ({navigation}) => {
 
   const renderItem = ({item}) => (
     <Pressable
-      // onPress={() =>
-      //   navigation.navigate('AdminJobDetailsScreen', {order: item})
-      // }
+      onPress={() => {
+        navigation.navigate('User1JobDetailScreen', {order: item});
+      }}
       style={styles.row}>
       <Text style={styles.cell}>{item.jobCardNo}</Text>
-      <Text style={styles.cell}>{item.customerName}</Text>
+      <Text style={styles.cell}>{item.jobName}</Text>
       <Text style={styles.cell}>
         {item.jobDate
           ? item.jobDate.toDate
@@ -145,9 +146,15 @@ const User1HomeScreen = ({navigation}) => {
           styles.statusCell,
           item.jobStatus?.toLowerCase() === 'completed'
             ? styles.completedStatus
+            : item.jobStatus?.toLowerCase() === 'started'
+            ? styles.jobStartedStatus
             : styles.pendingStatus,
         ]}>
-        {item.jobStatus}
+        {item.jobStatus?.toLowerCase() === 'completed'
+          ? 'Completed'
+          : item.jobStatus?.toLowerCase() === 'started'
+          ? 'Started'
+          : 'Pending'}
       </Text>
     </Pressable>
   );
@@ -161,10 +168,8 @@ const User1HomeScreen = ({navigation}) => {
           <CustomHeader
             showHeadingSection1Container={true}
             showHeadingTextContainer={true}
-            headingTitle={'Dashboard'}
+            headingTitle={'User Dashboard'}
             showHeadingSection2Container={true}
-            onPress={() => navigation.navigate('AdminCreateOrder')}
-            showHeaderBtn={true}
             btnHeading={'Create New'}
             showHeaderDropDown={true}
             onDropdownSelect={value => setFilter(value)}
@@ -195,18 +200,6 @@ const User1HomeScreen = ({navigation}) => {
               </Pressable>
             </View>
 
-            {/* <DatePicker
-              modal
-              mode="date"
-              open={openFrom}
-              date={fromDate || new Date()}
-              onConfirm={date => {
-                setOpenFrom(false);
-                setFromDate(date);
-              }}
-              onCancel={() => setOpenFrom(false)}
-            /> */}
-
             <DatePicker
               modal
               open={openFrom}
@@ -219,18 +212,6 @@ const User1HomeScreen = ({navigation}) => {
               }}
               onCancel={() => setOpenFrom(false)}
             />
-
-            {/* <DatePicker
-              modal
-              mode="date"
-              open={openTo}
-              date={toDate || new Date()}
-              onConfirm={date => {
-                setOpenTo(false);
-                setToDate(date);
-              }}
-              onCancel={() => setOpenTo(false)}
-            /> */}
 
             <DatePicker
               modal
@@ -373,6 +354,9 @@ const styles = StyleSheet.create({
   },
   pendingStatus: {
     color: 'red',
+  },
+  jobStartedStatus: {
+    color: '#3668B1',
   },
   noJobsContainer: {
     alignItems: 'center',

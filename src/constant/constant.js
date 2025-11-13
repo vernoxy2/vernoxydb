@@ -194,3 +194,15 @@ export const productData = [
   { id: 'P004', label: 'Product 4',value: 'Product 4', quantity: 300, price: 950 },
   { id: 'P005', label: 'Product 5',value: 'Product 5', quantity: 250, price: 1100 },
 ];
+
+export const detail2List = [
+  {label: 'Detail2 Option 1', value: 'Detail2 Option 1'},
+  {label: 'Detail2 Option 2', value: 'Detail2 Option 2'},
+  {label: 'Detail2 Option 3', value: 'Detail2 Option 3'},
+];
+
+export const detail4List = [
+  {label: 'Detail4 Option 1', value: 'Detail4 Option 1'},
+  {label: 'Detail4 Option 2', value: 'Detail4 Option 2'},
+  {label: 'Detail4 Option 3', value: 'Detail4 Option 3'},
+];

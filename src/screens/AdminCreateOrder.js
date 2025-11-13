@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState, useCallback} from 'react';
 import {
   View,
   Text,
@@ -25,6 +25,8 @@ import {
   upsAcross,
   windingDirection,
 } from '../constant/constant';
+import moment from 'moment';
+import {useRoute} from '@react-navigation/native';
 
 const AdminCreateOrder = ({navigation}) => {
   const [poNo, setPoNo] = useState('');
@@ -41,25 +43,81 @@ const AdminCreateOrder = ({navigation}) => {
   const [productDetail2, setProductDetail2] = useState('');
   const [productDetail3, setProductDetail3] = useState('');
 
+  const route = useRoute();
+  const {id, isEdit} = route.params || {};
+
+  useEffect(() => {
+    if (isEdit && id) {
+      fetchOrderDetails();
+    } else {
+      generateJobCardNo();
+    }
+  }, [isEdit, id, fetchOrderDetails, generateJobCardNo]);
+
+  const fetchOrderDetails = useCallback(async () => {
+    try {
+      const doc = await firestore().collection('orders').doc(id).get();
+      if (doc.exists) {
+        const data = doc.data();
+        // ✅ Text Inputs
+        setPoNo(data.poNo || '');
+        setQuotationNo(data.quotationNo || '');
+        setCustomerName(data.customerName || '');
+        setJobCardNo(data.jobCardNo || '');
+        setJobName(data.jobName || '');
+        setJobDate(data.jobDate?.toDate() || new Date());
+        setJobQty(data.jobQty || '');
+        setAccept(data.accept || false);
+        setJobPaper(data.jobPaper || '');
+        setProductDetail1(data.productDetail1 || '');
+        setProductDetail2(data.productDetail2 || '');
+        setProductDetail3(data.productDetail3 || '');
+      }
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+    }
+  }, [id]); // depends only on id
+
+  const generateJobCardNo = useCallback(async () => {
+    try {
+      const monthPrefix = moment().format('MMM'); // e.g. Nov
+      const yearSuffix = moment().format('YY'); // e.g. 25
+      const prefix = `${monthPrefix}.${yearSuffix}`; // e.g. Nov.25
+
+      const snapshot = await firestore()
+        .collection('orders')
+        .where('jobCardNo', '>=', `${prefix}-`)
+        .where('jobCardNo', '<=', `${prefix}-\uf8ff`) // ensures prefix match
+        .get();
+
+      let maxNumber = 0;
+
+      snapshot.forEach(doc => {
+        const jobCardNo = doc.data().jobCardNo;
+        if (jobCardNo && jobCardNo.startsWith(prefix)) {
+          const parts = jobCardNo.split('-');
+          if (parts.length === 2 && !isNaN(parts[1])) {
+            const num = parseInt(parts[1], 10);
+            if (num > maxNumber) {
+              maxNumber = num;
+            }
+          }
+        }
+      });
+
+      const nextNumber = maxNumber + 1;
+      const newJobNo = `${prefix}-${String(nextNumber).padStart(2, '0')}`;
+      setJobCardNo(newJobNo);
+    } catch (err) {
+      console.error('Error generating job card number:', err);
+    }
+  }, []); // no dependencies
+
   const handleSubmit = async () => {
     let assignedUserUID = '93VDkRLi7KaPya0saoCc4D6VasX2';
     let jobStatus = 'Pending';
 
     try {
-      // 🔍 Check if jobCardNo already exists
-      const snapshot = await firestore()
-        .collection('orders')
-        .where('jobCardNo', '==', jobCardNo)
-        .get();
-
-      if (!snapshot.empty) {
-        Alert.alert(
-          'Job Card No already exists!',
-          'Enter another job card no.',
-        );
-        return;
-      }
-
       const orderData = {
         poNo,
         jobDate: firestore.Timestamp.fromDate(jobDate),
@@ -73,10 +131,39 @@ const AdminCreateOrder = ({navigation}) => {
         createdBy: 'Admin',
         createdAt: firestore.FieldValue.serverTimestamp(),
         accept: accept,
+        productDetail1,
+        productDetail2,
+        productDetail3,
       };
+      if (isEdit && id) {
+        // ✅ Keep the old jobStatus instead of overwriting it
+        await firestore().collection('orders').doc(id).update(orderData);
+        Alert.alert('Success', 'Job updated successfully');
+      } else {
+        // ✅ Only assign jobStatus when creating a new record
+        const exists = await firestore()
+          .collection('orders')
+          .where('jobCardNo', '==', jobCardNo)
+          .get();
 
-      await firestore().collection('orders').add(orderData);
-      Alert.alert('Success', 'Job Created');
+        if (!exists.empty) {
+          Alert.alert(
+            'Duplicate Job Card No',
+            'Please generate another number',
+          );
+          return;
+        }
+
+        await firestore()
+          .collection('orders')
+          .add({
+            ...orderData,
+            jobStatus, // ✅ assign only when creating
+            createdAt: firestore.FieldValue.serverTimestamp(),
+            createdBy: 'Admin',
+          });
+        Alert.alert('Success', 'Job created successfully');
+      }
       navigation.goBack();
     } catch (error) {
       console.error('Submit Error:', error);
@@ -168,16 +255,17 @@ const AdminCreateOrder = ({navigation}) => {
             numericOnly={true}
           />
           <CustomDropdown
-            placeholder={'Product Detail3'}
+            placeholder={'Product Detail'}
             data={productData}
             style={styles.dropdownContainer}
             selectedText={styles.dropdownText}
             showIcon={true}
-            onSelect={item => setProductDetail3(item.value)}
+            onSelect={item => setProductDetail3(item)}
+            value={productDetail3}
           />
           <View style={styles.btnContainer}>
             <CustomButton
-              title={'Submit'}
+              title={isEdit ? 'Update' : 'Submit'}
               style={styles.submitBtn}
               onPress={handleSubmit}
             />
