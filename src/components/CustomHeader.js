@@ -23,10 +23,8 @@ const CustomHeader = ({
 }) => {
   const options = [
     {label: 'All Jobs', value: 'allJobs'},
-    {label: 'Printing', value: 'printingJobs'},
-    {label: 'Punching', value: 'punchingJobs'},
-    {label: 'Slitting ', value: 'slittingJobs'},
     {label: 'Pending ', value: 'Pending'},
+    {label: 'Started ', value: 'Started'},
     {label: 'Completed ', value: 'completed'},
   ];
 
@@ -132,7 +130,7 @@ export default CustomHeader;
 const styles = StyleSheet.create({
   loginTopContainer: {
     height: '25%',
-    backgroundColor: '#3668B1',
+    backgroundColor: '#125D9F',
     borderBottomLeftRadius: 40,
     borderBottomRightRadius: 40,
     alignItems: 'center',

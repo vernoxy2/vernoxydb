@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 10,
   },
   header: {
-    backgroundColor: '#3668B1',
+    backgroundColor: '#125D9F',
   },
   cellHeading: {
     width: 80,
@@ -337,7 +337,7 @@ const styles = StyleSheet.create({
     color: 'red',
   },
   jobStartedStatus: {
-    color: '#3668B1',
+    color: '#125D9F',
   },
   noJobsContainer: {
     alignItems: 'center',

@@ -11,13 +11,14 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Image,
+  Alert,
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import CustomHeader from '../components/CustomHeader';
 import SearchBar from '../components/SearchBar';
 import DatePicker from 'react-native-date-picker';
 
-const HomeScreen = ({navigation}) => {
+const User1HomeScreen = ({navigation}) => {
   const [jobData, setJobData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('allJobs');
@@ -66,7 +67,6 @@ const HomeScreen = ({navigation}) => {
           (job.jobCardNo && job.jobCardNo.toLowerCase().includes(query)) ||
           (job.customerName &&
             job.customerName.toLowerCase().includes(query)) ||
-          (job.jobName && job.jobName.toLowerCase().includes(query)) ||
           (() => {
             if (!job.jobDate) return false;
             let jobDateObj;
@@ -86,35 +86,7 @@ const HomeScreen = ({navigation}) => {
       );
     }
 
-    // if (fromDate || toDate) {
-    //   filtered = filtered.filter(job => {
-    //     let jobDate;
-
-    //     if (job.jobDate?.toDate) {
-    //       jobDate = job.jobDate.toDate();
-    //     } else if (job.jobDate?._seconds) {
-    //       jobDate = new Date(job.jobDate._seconds * 1000);
-    //     } else if (typeof job.jobDate === 'string') {
-    //       jobDate = new Date(job.jobDate);
-    //     } else {
-    //       jobDate = job.jobDate;
-    //     }
-
-    //     if (!(jobDate instanceof Date) || isNaN(jobDate)) return false;
-
-    //     // Adjusted To-Date (end of day)
-    //     const adjustedToDate = toDate
-    //       ? new Date(toDate.setHours(23, 59, 59, 999))
-    //       : null;
-
-    //     if (fromDate && jobDate < fromDate) return false;
-    //     if (adjustedToDate && jobDate > adjustedToDate) return false;
-
-    //     return true;
-    //   });
-    // }
-
-    if (fromDate || toDate) {
+     if (fromDate || toDate) {
       filtered = filtered.filter(job => {
         let jobDate;
 
@@ -166,6 +138,13 @@ const HomeScreen = ({navigation}) => {
       });
     }
 
+    // ✅ Only accepted jobs
+    filtered = filtered.filter(job => job.accept === true);
+
+    // ❌ Exclude completed jobs
+    filtered = filtered.filter(
+      job => job.jobStatus?.toLowerCase() !== 'completed',
+    );
     return filtered;
   };
 
@@ -173,22 +152,19 @@ const HomeScreen = ({navigation}) => {
     <View style={[styles.row, styles.header]}>
       <Text style={styles.cellHeading}>Job Card No</Text>
       <Text style={styles.cellHeading}>Job Name</Text>
-      <Text style={styles.cellHeading}>Customer Name</Text>
       <Text style={styles.cellHeading}>Date</Text>
       <Text style={styles.cellHeading}>Status</Text>
-      <Text style={styles.cellHeading}>Action</Text>
     </View>
   );
 
   const renderItem = ({item}) => (
     <Pressable
-      onPress={() =>
-        navigation.navigate('AdminJobDetailsScreen', {order: item})
-      }
+      onPress={() => {
+        navigation.navigate('User1JobDetailScreen', {order: item});
+      }}
       style={styles.row}>
       <Text style={styles.cell}>{item.jobCardNo}</Text>
       <Text style={styles.cell}>{item.jobName}</Text>
-      <Text style={styles.cell}>{item.customerName}</Text>
       <Text style={styles.cell}>
         {item.jobDate
           ? item.jobDate.toDate
@@ -196,15 +172,6 @@ const HomeScreen = ({navigation}) => {
             : new Date(item.jobDate._seconds * 1000).toDateString()
           : ''}
       </Text>
-      {/* <Text
-        style={[
-          styles.statusCell,
-          item.jobStatus?.toLowerCase() === 'completed'
-            ? styles.completedStatus
-            : styles.pendingStatus,
-        ]}>
-        {item.jobStatus}
-      </Text> */}
       <Text
         style={[
           styles.statusCell,
@@ -220,27 +187,6 @@ const HomeScreen = ({navigation}) => {
           ? 'Started'
           : 'Pending'}
       </Text>
-      <View
-        style={[
-          styles.cell,
-          {width: 80, alignItems: 'center', justifyContent: 'center'},
-        ]}>
-        {item.jobStatus?.toLowerCase() !== 'completed' && (
-          <Pressable
-            pointerEvents="box-only"
-            onStartShouldSetResponder={() => true}
-            onPress={e => {
-              e.stopPropagation();
-              navigation.navigate('AdminCreateOrder', {
-                id: item.id,
-                isEdit: true,
-              });
-            }}
-            style={styles.editButton}>
-            <Text style={styles.editText}>Edit</Text>
-          </Pressable>
-        )}
-      </View>
     </Pressable>
   );
 
@@ -253,10 +199,8 @@ const HomeScreen = ({navigation}) => {
           <CustomHeader
             showHeadingSection1Container={true}
             showHeadingTextContainer={true}
-            headingTitle={'Dashboard'}
+            headingTitle={'User Dashboard'}
             showHeadingSection2Container={true}
-            onPress={() => navigation.navigate('AdminCreateOrder')}
-            showHeaderBtn={true}
             btnHeading={'Create New'}
             showHeaderDropDown={true}
             onDropdownSelect={value => setFilter(value)}
@@ -287,7 +231,7 @@ const HomeScreen = ({navigation}) => {
               </Pressable>
             </View>
 
-             <DatePicker
+            <DatePicker
               modal
               open={openFrom}
               date={fromDate || new Date()}
@@ -299,6 +243,7 @@ const HomeScreen = ({navigation}) => {
               }}
               onCancel={() => setOpenFrom(false)}
             />
+
             <DatePicker
               modal
               open={openTo}
@@ -357,7 +302,7 @@ const HomeScreen = ({navigation}) => {
   );
 };
 
-export default HomeScreen;
+export default User1HomeScreen;
 
 const styles = StyleSheet.create({
   // Your existing styles
@@ -489,27 +434,5 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 14,
     fontFamily: 'Lato-Regular',
-  },
-  editButton: {
-    backgroundColor: '#3668B1',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 60,
-  },
-  editText: {
-    color: '#fff',
-    fontSize: 12,
-    fontFamily: 'Lato-Bold',
-  },
-  editButtonContainer: {
-    width: 80,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#3668B1', // ✅ visible color
-    paddingVertical: 8,
-    borderRadius: 6,
   },
 });

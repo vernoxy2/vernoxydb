@@ -186,3 +186,24 @@ export const machine = [
   {label: ' 1', value: '1'},
   {label: ' 2', value: '2'},
 ];
+
+export const productData = [
+  { id: 'P001', label: 'Product 1',value: 'Product 1', quantity: 100, price: 500 },
+  { id: 'P002', label: 'Product 2',value: 'Product 2', quantity: 200, price: 750 },
+  { id: 'P003', label: 'Product 3',value: 'Product 3', quantity: 150, price: 1200 },
+  { id: 'P004', label: 'Product 4',value: 'Product 4', quantity: 300, price: 950 },
+  { id: 'P005', label: 'Product 5',value: 'Product 5', quantity: 250, price: 1100 },
+];
+
+export const detail2List = [
+  {label: 'Option 1', value: 'Option 1'},
+  {label: 'Option 2', value: 'Option 2'},
+  {label: 'Option 3', value: 'Option 3'},
+];
+
+
+export const detail4List = [
+  {label: 'Option 1', value: 'Option 1'},
+  {label: 'Option 2', value: 'Option 2'},
+  {label: 'Option 3', value: 'Option 3'},
+];

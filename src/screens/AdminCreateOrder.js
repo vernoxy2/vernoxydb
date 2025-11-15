@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState, useCallback} from 'react';
 import {
   View,
   Text,
@@ -7,10 +7,6 @@ import {
   ScrollView,
   Alert,
   TouchableOpacity,
-  Image,
-  Platform,
-  Modal,
-  Pressable,
 } from 'react-native';
 import CustomHeader from '../components/CustomHeader';
 import CustomLabelTextInput from '../components/CustomLabelTextInput';
@@ -24,120 +20,150 @@ import {
   labelType,
   options,
   printingPlateSize,
+  productData,
   teethSize,
   upsAcross,
   windingDirection,
 } from '../constant/constant';
+import moment from 'moment';
+import {useRoute} from '@react-navigation/native';
 
 const AdminCreateOrder = ({navigation}) => {
   const [poNo, setPoNo] = useState('');
-  // const [receivedDate, setReceivedDate] = useState(new Date());
-  // const [openReceivedDate, setOpenReceivedDate] = useState(false);
+  const [quotationNo, setQuotationNo] = useState('');
   const [customerName, setCustomerName] = useState('');
   const [jobCardNo, setJobCardNo] = useState('');
   const [jobName, setJobName] = useState('');
   const [jobDate, setJobDate] = useState(new Date());
   const [openJobDate, setOpenJobDate] = useState(false);
-  const [jobSize, setJobSize] = useState('');
   const [jobQty, setJobQty] = useState('');
-  // const [tooling, setTooling] = useState('');
   const [jobPaper, setJobPaper] = useState('');
-  const [plateSize, setPlateSize] = useState('');
-  const [upsAcrossValue, setUpsAcrossValue] = useState('');
-  const [aroundValue, setAroundValue] = useState('');
-  const [teethSizeValue, setTeethSizeValue] = useState('');
-  const [blocksValue, setBlocksValue] = useState('');
-  const [windingDirectionValue, setWindingDirectionValue] = useState('');
-  const [checkboxState, setCheckboxState] = useState({
-    box1: false,
-    box2: false,
-    box3: false,
-  });
-  const [selectedLabelType, setSelectedLabelType] = useState('');
   const [accept, setAccept] = useState(false);
-  const [jobType, setJobType] = useState('');
+  const [productDetail1, setProductDetail1] = useState('');
+  const [productDetail2, setProductDetail2] = useState('');
+  const [productDetail3, setProductDetail3] = useState('');
 
-  const printingColors = [];
-  if (checkboxState.box1) printingColors.push('Uv');
-  if (checkboxState.box2) printingColors.push('Water');
-  if (checkboxState.box3) printingColors.push('Special');
+  const route = useRoute();
+  const {id, isEdit} = route.params || {};
 
-  const handleCheckboxChange = box => {
-    setCheckboxState(prevState => ({
-      ...prevState,
-      [box]: !prevState[box],
-    }));
-  };
-
-  const handleSubmit = async () => {
-    console.log('Selected Label Type:', selectedLabelType);
-    const normalizedLabelType = selectedLabelType.trim().toLowerCase();
-
-    let assignedUserUID;
-    let jobStatus;
- 
-    let punchingStatus;
-    if (normalizedLabelType === 'printing') {
-      assignedUserUID = 'uqTgURHeSvONdbFs154NfPYND1f2';
-      jobStatus = 'Printing';
-      setJobType('Printing');
-      punchingStatus = 'pending';
-    } else if (normalizedLabelType === 'plain') {
-      assignedUserUID = 'Kt1bJQzaUPdAowP7bTpdNQEfXKO2';
-      jobStatus = 'Punching';
-      setJobType('Plain');
-      punchingStatus = null;
+  useEffect(() => {
+    if (isEdit && id) {
+      fetchOrderDetails();
     } else {
-      Alert.alert('Error', 'Please select a valid Label Type');
-      return;
+      generateJobCardNo();
     }
+  }, [isEdit, id, fetchOrderDetails, generateJobCardNo]);
 
+  const fetchOrderDetails = useCallback(async () => {
     try {
-      // 🔍 Check if jobCardNo already exists
+      const doc = await firestore().collection('orders').doc(id).get();
+      if (doc.exists) {
+        const data = doc.data();
+        // ✅ Text Inputs
+        setPoNo(data.poNo || '');
+        setQuotationNo(data.quotationNo || '');
+        setCustomerName(data.customerName || '');
+        setJobCardNo(data.jobCardNo || '');
+        setJobName(data.jobName || '');
+        setJobDate(data.jobDate?.toDate() || new Date());
+        setJobQty(data.jobQty || '');
+        setAccept(data.accept || false);
+        setJobPaper(data.jobPaper || '');
+        setProductDetail1(data.productDetail1 || '');
+        setProductDetail2(data.productDetail2 || '');
+        setProductDetail3(data.productDetail3 || '');
+      }
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+    }
+  }, [id]); // depends only on id
+
+  const generateJobCardNo = useCallback(async () => {
+    try {
+      const monthPrefix = moment().format('MMM'); // e.g. Nov
+      const yearSuffix = moment().format('YY'); // e.g. 25
+      const prefix = `${monthPrefix}.${yearSuffix}`; // e.g. Nov.25
+
       const snapshot = await firestore()
         .collection('orders')
-        .where('jobCardNo', '==', jobCardNo)
+        .where('jobCardNo', '>=', `${prefix}-`)
+        .where('jobCardNo', '<=', `${prefix}-\uf8ff`) // ensures prefix match
         .get();
 
-      if (!snapshot.empty) {
-        Alert.alert(
-          'Job Card No already exists!',
-          'Enter another job card no.',
-        );
-        return;
-      }
+      let maxNumber = 0;
 
+      snapshot.forEach(doc => {
+        const jobCardNo = doc.data().jobCardNo;
+        if (jobCardNo && jobCardNo.startsWith(prefix)) {
+          const parts = jobCardNo.split('-');
+          if (parts.length === 2 && !isNaN(parts[1])) {
+            const num = parseInt(parts[1], 10);
+            if (num > maxNumber) {
+              maxNumber = num;
+            }
+          }
+        }
+      });
+
+      const nextNumber = maxNumber + 1;
+      const newJobNo = `${prefix}-${String(nextNumber).padStart(2, '0')}`;
+      setJobCardNo(newJobNo);
+    } catch (err) {
+      console.error('Error generating job card number:', err);
+    }
+  }, []); // no dependencies
+
+  const handleSubmit = async () => {
+    let assignedUserUID = '93VDkRLi7KaPya0saoCc4D6VasX2';
+    let jobStatus = 'Pending';
+
+    try {
       const orderData = {
         poNo,
-        // receivedDate: firestore.Timestamp.fromDate(receivedDate),
         jobDate: firestore.Timestamp.fromDate(jobDate),
         customerName,
         jobCardNo,
         jobName,
-        jobSize,
         jobQty,
-        // tooling,
         jobStatus,
-        jobType:selectedLabelType,
+        quotationNo,
         assignedTo: assignedUserUID,
         createdBy: 'Admin',
         createdAt: firestore.FieldValue.serverTimestamp(),
-        jobPaper,
-        printingPlateSize: plateSize,
-        upsAcross: upsAcrossValue,
-        around: aroundValue,
-        teethSize: teethSizeValue,
-        blocks: blocksValue,
-        windingDirection: windingDirectionValue,
-        printingColors,
-        punchingStatus: normalizedLabelType === 'printing' ? 'pending' : null,
         accept: accept,
+        productDetail1,
+        productDetail2,
+        productDetail3,
       };
+      if (isEdit && id) {
+        // ✅ Keep the old jobStatus instead of overwriting it
+        await firestore().collection('orders').doc(id).update(orderData);
+        Alert.alert('Success', 'Job updated successfully');
+      } else {
+        // ✅ Only assign jobStatus when creating a new record
+        const exists = await firestore()
+          .collection('orders')
+          .where('jobCardNo', '==', jobCardNo)
+          .get();
 
-      await firestore().collection('orders').add(orderData);
-      console.log('orderData', orderData);
+        if (!exists.empty) {
+          Alert.alert(
+            'Duplicate Job Card No',
+            'Please generate another number',
+          );
+          return;
+        }
 
-      Alert.alert('Success', 'Job Created');
+        await firestore()
+          .collection('orders')
+          .add({
+            ...orderData,
+            jobStatus, // ✅ assign only when creating
+            createdAt: firestore.FieldValue.serverTimestamp(),
+            createdBy: 'Admin',
+          });
+        Alert.alert('Success', 'Job created successfully');
+      }
       navigation.goBack();
     } catch (error) {
       console.error('Submit Error:', error);
@@ -165,7 +191,14 @@ const AdminCreateOrder = ({navigation}) => {
               onChangeText={setPoNo}
             />
           </View>
-
+          <View style={styles.inputBackContainer}>
+            <Text style={styles.inputLabel}>Quotation No :</Text>
+            <TextInput
+              style={styles.inputContainer}
+              value={quotationNo}
+              onChangeText={setQuotationNo}
+            />
+          </View>
           <View style={styles.inputBackContainer}>
             <Text style={styles.inputLabel}>Job Date:</Text>
             <TouchableOpacity
@@ -187,29 +220,6 @@ const AdminCreateOrder = ({navigation}) => {
             onCancel={() => setOpenJobDate(false)}
           />
 
-          {/* Job Received Date */}
-          {/* <View style={styles.inputBackContainer}>
-            <Text style={styles.inputLabel}>Job Received Date:</Text>
-            <TouchableOpacity
-              onPress={() => setOpenReceivedDate(true)}
-              style={styles.inputContainer}>
-              <Text>{receivedDate.toDateString()}</Text>
-            </TouchableOpacity>
-          </View>
-
-          <DatePicker
-            modal
-            mode="date"
-            open={openReceivedDate}
-            date={receivedDate}
-            minimumDate={new Date()} // No past dates
-            onConfirm={date => {
-              setOpenReceivedDate(false);
-              setReceivedDate(date);
-            }}
-            onCancel={() => setOpenReceivedDate(false)}
-          /> */}
-
           <CustomLabelTextInput
             label="Customer Name :"
             value={customerName}
@@ -225,121 +235,37 @@ const AdminCreateOrder = ({navigation}) => {
             value={jobName}
             onChangeText={setJobName}
           />
-
-          <CustomLabelTextInput
-            label="Job Original Size :"
-            value={jobSize}
-            onChangeText={setJobSize}
-          />
           <CustomLabelTextInput
             label="Job Qty :"
             value={jobQty}
             onChangeText={setJobQty}
           />
-          {/* <CustomLabelTextInput
-            label="Tooling"
-            value={tooling}
-            onChangeText={setTooling}
-          /> */}
-          <CustomDropdown
-            placeholder={'Job Paper / Film Material'}
-            data={options}
-            style={styles.dropdownContainer}
-            selectedText={styles.dropdownText}
-            onSelect={item => setJobPaper(item)}
-            showIcon={true}
-          />
-          <CustomDropdown
-            placeholder={'Printing Plate Size'}
-            data={printingPlateSize}
-            style={styles.dropdownContainer}
-            selectedText={styles.dropdownText}
-            onSelect={item => setPlateSize(item)}
-            showIcon={true}
-          />
-          <CustomDropdown
-            placeholder={'Sterio Ups'}
-            data={upsAcross}
-            style={styles.dropdownContainer}
-            selectedText={styles.dropdownText}
-            onSelect={item => setUpsAcrossValue(item)}
-            showIcon={true}
-          />
-          <CustomDropdown
-            placeholder={'Around'}
-            data={around}
-            style={styles.dropdownContainer}
-            selectedText={styles.dropdownText}
-            onSelect={item => setAroundValue(item)}
-            showIcon={true}
-          />
-          <CustomDropdown
-            placeholder={'Teeth Size'}
-            data={teethSize}
-            style={styles.dropdownContainer}
-            selectedText={styles.dropdownText}
-            onSelect={item => setTeethSizeValue(item)}
-            showIcon={true}
-          />
-          <CustomDropdown
-            placeholder={'Blocks'}
-            data={blocks}
-            style={styles.dropdownContainer}
-            selectedText={styles.dropdownText}
-            onSelect={item => setBlocksValue(item)}
-            showIcon={true}
-          />
-          <CustomDropdown
-            placeholder={'Winding Direction'}
-            data={windingDirection}
-            style={styles.dropdownContainer}
-            selectedText={styles.dropdownText}
-            onSelect={item => setWindingDirectionValue(item)}
-            showIcon={true}
+
+          <CustomLabelTextInput
+            label="Product Detail1 :"
+            value={productDetail1}
+            onChangeText={setProductDetail1}
           />
 
-          {/* <View style={styles.container}>
-            <View style={styles.printingContainer}>
-              <Text style={styles.dropdownText}>Printing Colors:</Text>
-
-              {['Uv', 'Water', 'Special'].map((label, index) => {
-                const boxKey = `box${index + 1}`;
-                return (
-                  <TouchableOpacity
-                    key={label}
-                    style={styles.checkboxContainer}
-                    onPress={() => handleCheckboxChange(boxKey)}>
-                    <View
-                      style={[
-                        styles.checkbox,
-                        checkboxState[boxKey] && styles.checked,
-                      ]}>
-                      {checkboxState[boxKey] && (
-                        <Image
-                          style={styles.checkmarkImage}
-                          source={require('../assets/images/check.png')}
-                        />
-                      )}
-                    </View>
-                    <Text style={styles.checkboxText}>{label}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View> */}
-
+          <CustomLabelTextInput
+            label="Product Detail2 :"
+            value={productDetail2}
+            onChangeText={setProductDetail2}
+            keyboardType="numeric"
+            numericOnly={true}
+          />
           <CustomDropdown
-            placeholder={'Label Type'}
-            data={labelType}
+            placeholder={'Product Detail'}
+            data={productData}
             style={styles.dropdownContainer}
             selectedText={styles.dropdownText}
             showIcon={true}
-            onSelect={item => setSelectedLabelType(item.value)}
+            onSelect={item => setProductDetail3(item)}
+            value={productDetail3}
           />
-
           <View style={styles.btnContainer}>
             <CustomButton
-              title={'Submit'}
+              title={isEdit ? 'Update' : 'Submit'}
               style={styles.submitBtn}
               onPress={handleSubmit}
             />

@@ -162,7 +162,7 @@ const SlittingHomeScreen = ({navigation}) => {
           item.slittingStatus === 'completed'
             ? styles.completedStatus
             : item.slittingStatus === 'started'
-            ? {color: '#3668B1'}
+            ? {color: '#125D9F'}
             : styles.pendingStatus,
         ]}>
         {item.slittingStatus || 'pending'}
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 10,
   },
   header: {
-    backgroundColor: '#3668B1',
+    backgroundColor: '#125D9F',
   },
   cellHeading: {
     width: 80,

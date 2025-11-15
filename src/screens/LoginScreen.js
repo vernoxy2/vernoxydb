@@ -18,7 +18,6 @@ const LoginScreen = ({navigation}) => {
       Alert.alert('Error', 'Please enter both email and password.');
       return;
     }
-
     if (loading) return; // prevent double tap
     setLoading(true);
 
@@ -32,7 +31,6 @@ const LoginScreen = ({navigation}) => {
         );
         await auth().signOut();
       }
-
       // Now safely sign in
       const userCredential = await auth().signInWithEmailAndPassword(
         email.trim(),
@@ -53,12 +51,7 @@ const LoginScreen = ({navigation}) => {
       const userData = userDoc.data();
       const role = userData.role;
 
-      if (
-        role === 'Admin' ||
-        role === 'Printing' ||
-        role === 'Punching' ||
-        role === 'Slitting'
-      ) {
+      if (role === 'admin' || role === 'user') {
         console.log('🔑 User role:', role);
         navigation.dispatch(
           CommonActions.reset({
@@ -81,6 +74,7 @@ const LoginScreen = ({navigation}) => {
       setLoading(false);
     }
   };
+
   return (
     <View style={styles.loginMainContainer}>
       <Loader visible={loading} />
@@ -105,7 +99,6 @@ const LoginScreen = ({navigation}) => {
 
       <CustomButton
         title="Login"
-        // title={loading ? 'Logging in...' : 'Login'}
         onPress={handleLogin}
         style={styles.loginBtn}
       />
@@ -124,7 +117,7 @@ const styles = StyleSheet.create({
   },
   loginTopContainer: {
     height: '25%',
-    backgroundColor: '#3668B1',
+    backgroundColor: '#125D9F',
     borderBottomLeftRadius: 40,
     borderBottomRightRadius: 40,
     alignItems: 'center',
@@ -156,7 +149,7 @@ const styles = StyleSheet.create({
     width: '90%',
     borderRadius: 10,
     marginTop: 35,
-    backgroundColor: '#3668B1',
+    backgroundColor: '#125D9F',
     justifyContent: 'center',
     alignItems: 'center',
   },
