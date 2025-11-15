@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, {useEffect, useState} from 'react';
 import {View, Text, ScrollView, StyleSheet} from 'react-native';
 import CustomHeader from '../components/CustomHeader';
@@ -6,6 +7,8 @@ import CustomButton from '../components/CustomButton';
 import CustomLabelText from '../components/CustomLabelText';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
+import {useContext} from 'react';
+import {NotificationContext} from '../context/NotificationContext';
 
 const NotificationScreen = () => {
   const [jobData, setJobData] = useState([]);
@@ -15,28 +18,70 @@ const NotificationScreen = () => {
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
   const [role, setRole] = useState(null);
+  const {hasNew, setHasNew} = useContext(NotificationContext);
 
-  useEffect(() => {
-    fetchUserRole();
-    const unsubscribe = firestore()
-      .collection('orders')
-      .orderBy('createdAt', 'desc') // ✅ Sort newest first
-      .onSnapshot(
-        snapshot => {
-          const fetchedJobs = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-          setJobData(fetchedJobs);
-          setLoading(false);
-        },
-        error => {
-          console.error('Error fetching jobs: ', error);
-          setLoading(false);
-        },
-      );
-    return () => unsubscribe();
-  }, []);
+  // useEffect(() => {
+  //   fetchUserRole();
+  //   const unsubscribe = firestore()
+  //     .collection('orders')
+  //     .orderBy('createdAt', 'desc') // ✅ Sort newest first
+  //     .onSnapshot(
+  //       snapshot => {
+  //         const fetchedJobs = snapshot.docs.map(doc => ({
+  //           id: doc.id,
+  //           ...doc.data(),
+  //         }));
+  //         setJobData(fetchedJobs);
+  //         setLoading(false);
+  //       },
+  //       error => {
+  //         console.error('Error fetching jobs: ', error);
+  //         setLoading(false);
+  //       },
+  //     );
+  //   return () => unsubscribe();
+  // }, []);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+/* eslint-disable react-hooks/exhaustive-deps */
+
+// 🔥 Fetch jobs + update hasNew
+useEffect(() => {
+  fetchUserRole();
+
+  const unsubscribe = firestore()
+    .collection('orders')
+    .orderBy('createdAt', 'desc')
+    .onSnapshot(
+      snapshot => {
+        const fetchedJobs = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        setJobData(fetchedJobs);
+        setLoading(false);
+
+        // 🔥 show badge if unaccepted jobs exist
+        const unaccepted = fetchedJobs.filter(j => j.accept === false);
+        setHasNew(unaccepted.length > 0);
+      },
+      error => {
+        console.error('Error fetching jobs:', error);
+      },
+    );
+
+  return () => unsubscribe();
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
+
+// 🔥 When user opens Notification screen → clear badge
+useEffect(() => {
+  setHasNew(false);
+  
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
 
   const fetchUserRole = async () => {
     try {
@@ -133,32 +178,44 @@ const NotificationScreen = () => {
   // };
 
   const getFilteredJobs = () => {
-  let filtered = jobData;
+    let filtered = jobData;
 
-  if (filter !== 'allJobs') {
-    filtered = filtered.filter(
-      job =>
-        job.jobStatus?.toLowerCase() ===
-        filter.replace('Jobs', '').toLowerCase(),
-    );
-  }
+    if (filter !== 'allJobs') {
+      filtered = filtered.filter(
+        job =>
+          job.jobStatus?.toLowerCase() ===
+          filter.replace('Jobs', '').toLowerCase(),
+      );
+    }
 
-  if (searchQuery.trim()) {
-    const query = searchQuery.toLowerCase();
-    filtered = filtered.filter(
-      job =>
-        (job.jobCardNo && job.jobCardNo.toLowerCase().includes(query)) ||
-        (job.customerName && job.customerName.toLowerCase().includes(query))
-    );
-  }
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        job =>
+          (job.jobCardNo && job.jobCardNo.toLowerCase().includes(query)) ||
+          (job.customerName && job.customerName.toLowerCase().includes(query)),
+      );
+    }
 
-  // 👇 ONLY USERS see unaccepted jobs
-  if (role && role.toLowerCase() === 'user') {
-    filtered = filtered.filter(job => job.accept === false);
-  }
+    // 👇 ONLY USERS see unaccepted jobs
+    if (role && role.toLowerCase() === 'user') {
+      filtered = filtered.filter(job => job.accept === false);
+    }
 
-  return filtered;
-};
+    return filtered;
+  };
+
+  // const handleAccept = async jobId => {
+  //   try {
+  //     await firestore().collection('orders').doc(jobId).update({
+  //       accept: true,
+  //       jobAcceptedAt: firestore.FieldValue.serverTimestamp(),
+  //     });
+  //     console.log(`Job ${jobId} accepted.`);
+  //   } catch (error) {
+  //     console.error('Error accepting job:', error);
+  //   }
+  // };
 
   const handleAccept = async jobId => {
     try {
@@ -166,6 +223,14 @@ const NotificationScreen = () => {
         accept: true,
         jobAcceptedAt: firestore.FieldValue.serverTimestamp(),
       });
+
+      // 🔥 Check remaining unaccepted jobs
+      const remaining = jobData.filter(
+        job => job.accept === false && job.id !== jobId,
+      );
+
+      setHasNew(remaining.length > 0); // update badge
+
       console.log(`Job ${jobId} accepted.`);
     } catch (error) {
       console.error('Error accepting job:', error);

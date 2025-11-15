@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useContext} from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import firestore from '@react-native-firebase/firestore';
 import CustomHeader from '../components/CustomHeader';
 import SearchBar from '../components/SearchBar';
 import DatePicker from 'react-native-date-picker';
+import { NotificationContext } from '../context/NotificationContext';
 
 const User1HomeScreen = ({navigation}) => {
   const [jobData, setJobData] = useState([]);
@@ -27,6 +28,33 @@ const User1HomeScreen = ({navigation}) => {
   const [toDate, setToDate] = useState(null);
   const [openFrom, setOpenFrom] = useState(false);
   const [openTo, setOpenTo] = useState(false);
+  const { setHasNew } = useContext(NotificationContext);
+
+  useEffect(() => {
+  // listen for orders and mark badge if any unaccepted exist
+  const unsubscribe = firestore()
+    .collection('orders')
+    .orderBy('createdAt', 'desc')
+    .onSnapshot(
+      snapshot => {
+        const fetchedJobs = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        // count unaccepted jobs (only for user role, if you later set role in this screen)
+        const unacceptedCount = fetchedJobs.filter(j => j.accept === false).length;
+
+        setHasNew(unacceptedCount > 0);
+      },
+      error => {
+        console.error('Error listening for badge jobs: ', error);
+      }
+    );
+
+  return () => unsubscribe();
+}, [setHasNew]);
+
 
   useEffect(() => {
     const unsubscribe = firestore()
