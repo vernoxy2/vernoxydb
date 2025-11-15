@@ -86,6 +86,34 @@ const HomeScreen = ({navigation}) => {
       );
     }
 
+    // if (fromDate || toDate) {
+    //   filtered = filtered.filter(job => {
+    //     let jobDate;
+
+    //     if (job.jobDate?.toDate) {
+    //       jobDate = job.jobDate.toDate();
+    //     } else if (job.jobDate?._seconds) {
+    //       jobDate = new Date(job.jobDate._seconds * 1000);
+    //     } else if (typeof job.jobDate === 'string') {
+    //       jobDate = new Date(job.jobDate);
+    //     } else {
+    //       jobDate = job.jobDate;
+    //     }
+
+    //     if (!(jobDate instanceof Date) || isNaN(jobDate)) return false;
+
+    //     // Adjusted To-Date (end of day)
+    //     const adjustedToDate = toDate
+    //       ? new Date(toDate.setHours(23, 59, 59, 999))
+    //       : null;
+
+    //     if (fromDate && jobDate < fromDate) return false;
+    //     if (adjustedToDate && jobDate > adjustedToDate) return false;
+
+    //     return true;
+    //   });
+    // }
+
     if (fromDate || toDate) {
       filtered = filtered.filter(job => {
         let jobDate;
@@ -102,13 +130,37 @@ const HomeScreen = ({navigation}) => {
 
         if (!(jobDate instanceof Date) || isNaN(jobDate)) return false;
 
-        // Adjusted To-Date (end of day)
-        const adjustedToDate = toDate
-          ? new Date(toDate.setHours(23, 59, 59, 999))
+        // Normalize jobDate (set to 00:00:00)
+        const normalizedJobDate = new Date(
+          jobDate.getFullYear(),
+          jobDate.getMonth(),
+          jobDate.getDate(),
+        );
+
+        // Normalize fromDate
+        const normalizedFrom = fromDate
+          ? new Date(
+              fromDate.getFullYear(),
+              fromDate.getMonth(),
+              fromDate.getDate(),
+            )
           : null;
 
-        if (fromDate && jobDate < fromDate) return false;
-        if (adjustedToDate && jobDate > adjustedToDate) return false;
+        // Normalize toDate
+        const normalizedTo = toDate
+          ? new Date(
+              toDate.getFullYear(),
+              toDate.getMonth(),
+              toDate.getDate(),
+              23,
+              59,
+              59,
+              999,
+            )
+          : null;
+
+        if (normalizedFrom && normalizedJobDate < normalizedFrom) return false;
+        if (normalizedTo && normalizedJobDate > normalizedTo) return false;
 
         return true;
       });
@@ -144,7 +196,7 @@ const HomeScreen = ({navigation}) => {
             : new Date(item.jobDate._seconds * 1000).toDateString()
           : ''}
       </Text>
-      <Text
+      {/* <Text
         style={[
           styles.statusCell,
           item.jobStatus?.toLowerCase() === 'completed'
@@ -152,25 +204,42 @@ const HomeScreen = ({navigation}) => {
             : styles.pendingStatus,
         ]}>
         {item.jobStatus}
+      </Text> */}
+      <Text
+        style={[
+          styles.statusCell,
+          item.jobStatus?.toLowerCase() === 'completed'
+            ? styles.completedStatus
+            : item.jobStatus?.toLowerCase() === 'started'
+            ? styles.jobStartedStatus
+            : styles.pendingStatus,
+        ]}>
+        {item.jobStatus?.toLowerCase() === 'completed'
+          ? 'Completed'
+          : item.jobStatus?.toLowerCase() === 'started'
+          ? 'Started'
+          : 'Pending'}
       </Text>
       <View
         style={[
           styles.cell,
           {width: 80, alignItems: 'center', justifyContent: 'center'},
         ]}>
-        <Pressable
-          pointerEvents="box-only"
-          onStartShouldSetResponder={() => true}
-          onPress={e => {
-            e.stopPropagation();
-            navigation.navigate('AdminCreateOrder', {
-              id: item.id,
-              isEdit: true,
-            });
-          }}
-          style={styles.editButton}>
-          <Text style={styles.editText}>Edit</Text>
-        </Pressable>
+        {item.jobStatus?.toLowerCase() !== 'completed' && (
+          <Pressable
+            pointerEvents="box-only"
+            onStartShouldSetResponder={() => true}
+            onPress={e => {
+              e.stopPropagation();
+              navigation.navigate('AdminCreateOrder', {
+                id: item.id,
+                isEdit: true,
+              });
+            }}
+            style={styles.editButton}>
+            <Text style={styles.editText}>Edit</Text>
+          </Pressable>
+        )}
       </View>
     </Pressable>
   );
@@ -218,19 +287,7 @@ const HomeScreen = ({navigation}) => {
               </Pressable>
             </View>
 
-            {/* <DatePicker
-              modal
-              mode="date"
-              open={openFrom}
-              date={fromDate || new Date()}
-              onConfirm={date => {
-                setOpenFrom(false);
-                setFromDate(date);
-              }}
-              onCancel={() => setOpenFrom(false)}
-            /> */}
-
-            <DatePicker
+             <DatePicker
               modal
               open={openFrom}
               date={fromDate || new Date()}
@@ -242,19 +299,6 @@ const HomeScreen = ({navigation}) => {
               }}
               onCancel={() => setOpenFrom(false)}
             />
-
-            {/* <DatePicker
-              modal
-              mode="date"
-              open={openTo}
-              date={toDate || new Date()}
-              onConfirm={date => {
-                setOpenTo(false);
-                setToDate(date);
-              }}
-              onCancel={() => setOpenTo(false)}
-            /> */}
-
             <DatePicker
               modal
               open={openTo}
@@ -300,9 +344,9 @@ const HomeScreen = ({navigation}) => {
                     resizeMode="contain"
                   />
                   <Text style={styles.noJobsTitle}>No Jobs Available</Text>
-                  <Text style={styles.noJobsSubtitle}>
+                  {/* <Text style={styles.noJobsSubtitle}>
                     You're all caught up! {'\n'}No such jobs are available.
-                  </Text>
+                  </Text> */}
                 </View>
               )}
             </View>
@@ -396,6 +440,9 @@ const styles = StyleSheet.create({
   },
   pendingStatus: {
     color: 'red',
+  },
+  jobStartedStatus: {
+    color: '#3668B1',
   },
   noJobsContainer: {
     alignItems: 'center',

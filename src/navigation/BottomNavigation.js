@@ -8,6 +8,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import AdminCreateOrder from '../screens/AdminCreateOrder';
 import homeIcon from '../assets/images/homeBottomImg.png';
 import profileIcon from '../assets/images/profileBottomImg.png';
+import NotificationIcon from '../assets/images/notificationBottomImg.png';
 import NotificationScreen from '../screens/NotificationScreen';
 import User1HomeScreen from '../screens/User1HomeScreen';
 import User1JobDetailScreen from '../screens/User1JobDetailScreen';
@@ -36,7 +37,6 @@ const userStack = () => (
 const BottomNavigation = ({route}) => {
   const role = route?.params?.role ?? 'Admin';
 
-  // Select correct stack based on user role
   const HomeComponent =
     role === 'Admin' ? AdminStack : role === 'user' ? userStack : AdminStack;
 
@@ -47,6 +47,7 @@ const BottomNavigation = ({route}) => {
           let icon;
           if (route.name === 'Home') icon = homeIcon;
           else if (route.name === 'Profile') icon = profileIcon;
+          else if (route.name === 'Notifications') icon = NotificationIcon;
 
           return (
             <Image
@@ -65,8 +66,15 @@ const BottomNavigation = ({route}) => {
         tabBarInactiveTintColor: 'gray',
         headerShown: false,
       })}>
+      {/* Home Tab */}
       <Tab.Screen name="Home" component={HomeComponent} />
-      <Tab.Screen name="Notifications" component={NotificationScreen} />
+
+      {/* 👇 SHOW NOTIFICATION TAB ONLY IF ROLE = 'user' */}
+      {role === 'user' && (
+        <Tab.Screen name="Notifications" component={NotificationScreen} />
+      )}
+
+      {/* Profile Tab */}
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

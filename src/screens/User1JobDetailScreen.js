@@ -116,10 +116,10 @@ const User1JobDetailScreen = ({route, navigation}) => {
             <Text style={styles.value}>{order.jobQty}</Text>
 
             <Text style={styles.label}>Product Detail1:</Text>
-            <Text style={styles.value}>{order.productDetail1.label}</Text>
+            <Text style={styles.value}>{order.productDetail1}</Text>
 
             <Text style={styles.label}>Product Detail2:</Text>
-            <Text style={styles.value}>{order.productDetail2.label}</Text>
+            <Text style={styles.value}>{order.productDetail2}</Text>
 
             <Text style={styles.label}>Product Detail3:</Text>
             <Text style={styles.value}>{order.productDetail3.label}</Text>

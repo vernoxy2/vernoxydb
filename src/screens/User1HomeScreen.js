@@ -86,7 +86,7 @@ const User1HomeScreen = ({navigation}) => {
       );
     }
 
-    if (fromDate || toDate) {
+     if (fromDate || toDate) {
       filtered = filtered.filter(job => {
         let jobDate;
 
@@ -102,18 +102,49 @@ const User1HomeScreen = ({navigation}) => {
 
         if (!(jobDate instanceof Date) || isNaN(jobDate)) return false;
 
-        // Adjusted To-Date (end of day)
-        const adjustedToDate = toDate
-          ? new Date(toDate.setHours(23, 59, 59, 999))
+        // Normalize jobDate (set to 00:00:00)
+        const normalizedJobDate = new Date(
+          jobDate.getFullYear(),
+          jobDate.getMonth(),
+          jobDate.getDate(),
+        );
+
+        // Normalize fromDate
+        const normalizedFrom = fromDate
+          ? new Date(
+              fromDate.getFullYear(),
+              fromDate.getMonth(),
+              fromDate.getDate(),
+            )
           : null;
 
-        if (fromDate && jobDate < fromDate) return false;
-        if (adjustedToDate && jobDate > adjustedToDate) return false;
+        // Normalize toDate
+        const normalizedTo = toDate
+          ? new Date(
+              toDate.getFullYear(),
+              toDate.getMonth(),
+              toDate.getDate(),
+              23,
+              59,
+              59,
+              999,
+            )
+          : null;
+
+        if (normalizedFrom && normalizedJobDate < normalizedFrom) return false;
+        if (normalizedTo && normalizedJobDate > normalizedTo) return false;
 
         return true;
       });
     }
 
+    // ✅ Only accepted jobs
+    filtered = filtered.filter(job => job.accept === true);
+
+    // ❌ Exclude completed jobs
+    filtered = filtered.filter(
+      job => job.jobStatus?.toLowerCase() !== 'completed',
+    );
     return filtered;
   };
 
@@ -258,9 +289,9 @@ const User1HomeScreen = ({navigation}) => {
                     resizeMode="contain"
                   />
                   <Text style={styles.noJobsTitle}>No Jobs Available</Text>
-                  <Text style={styles.noJobsSubtitle}>
+                  {/* <Text style={styles.noJobsSubtitle}>
                     You're all caught up! {'\n'}No such jobs are available.
-                  </Text>
+                  </Text> */}
                 </View>
               )}
             </View>

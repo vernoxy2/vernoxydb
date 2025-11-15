@@ -196,13 +196,14 @@ export const productData = [
 ];
 
 export const detail2List = [
-  {label: 'Detail2 Option 1', value: 'Detail2 Option 1'},
-  {label: 'Detail2 Option 2', value: 'Detail2 Option 2'},
-  {label: 'Detail2 Option 3', value: 'Detail2 Option 3'},
+  {label: 'Option 1', value: 'Option 1'},
+  {label: 'Option 2', value: 'Option 2'},
+  {label: 'Option 3', value: 'Option 3'},
 ];
 
+
 export const detail4List = [
-  {label: 'Detail4 Option 1', value: 'Detail4 Option 1'},
-  {label: 'Detail4 Option 2', value: 'Detail4 Option 2'},
-  {label: 'Detail4 Option 3', value: 'Detail4 Option 3'},
+  {label: 'Option 1', value: 'Option 1'},
+  {label: 'Option 2', value: 'Option 2'},
+  {label: 'Option 3', value: 'Option 3'},
 ];

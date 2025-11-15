@@ -12,36 +12,14 @@ import Share from 'react-native-share';
 const AdminJobDetailsScreen = ({route, navigation}) => {
   const {order} = route.params;
   const [totalTime, setTotalTime] = useState(null);
-  const [totalB, setTotalB] = useState(0);
-  const [totalC, setTotalC] = useState(0);
 
   useEffect(() => {
-    if (order.endTime) {
-      // Decide start time: printingStartedAt or punchingStartedAt
-      const startTimestamp = order.updatedAt || order.updatedByPunchingAt;
+    if (order.updatedJobByAt && order.jobStartAt) {
+      const start = order.jobStartAt.toDate();
+      const end = order.updatedJobByAt.toDate();
 
-      if (startTimestamp) {
-        const start = startTimestamp.toDate();
-        const end = order.endTime.toDate();
-        const durationMs = end - start; // duration in milliseconds
-
-        setTotalTime(durationMs);
-      }
-    }
-  }, [order]);
-
-  useEffect(() => {
-    if (order.slittingData && Array.isArray(order.slittingData)) {
-      let sumB = 0;
-      let sumC = 0;
-      order.slittingData.forEach(item => {
-        const B = parseFloat(item.B) || 0;
-        const C = parseFloat(item.C) || 0;
-        sumB += B;
-        sumC += C;
-      });
-      setTotalB(sumB);
-      setTotalC(sumC);
+      const durationMs = end - start;
+      setTotalTime(durationMs);
     }
   }, [order]);
 
@@ -95,36 +73,28 @@ const AdminJobDetailsScreen = ({route, navigation}) => {
         Alert.alert('Permission Denied', 'Storage permission not granted');
         return;
       }
-      // Pre-calculate formatted values
-
+      // 🧮 Pre-calculate formatted values (your existing logic)
       const jobCreationTime = order.createdAt
         ? formatTimestamp(order.createdAt)
         : '';
-
-      const startTimeFormatted = order.updatedAt
-        ? formatTimestamp(order.updatedAt)
+      const startTimeFormatted = order.jobStartAt
+        ? formatTimestamp(order.jobStartAt)
         : '';
-      const endTimeFormatted = order.endTime
-        ? formatTimestamp(order.endTime)
+      const endTimeFormatted = order.updatedJobByAt
+        ? formatTimestamp(order.updatedJobByAt)
         : '';
       const totalTimeFormatted =
         totalTime !== null ? formatDuration(totalTime) : '';
+
       const jobDateFormatted = order.jobDate
         ? order.jobDate.toDate().toLocaleDateString()
-        : '';
-      const printingStartTimeFormatted = order.updatedAt
-        ? formatTimestamp(order.updatedAt)
-        : '';
-
-      const printingEndTimeFormatted = order.updatedByPrintingAt
-        ? formatTimestamp(order.updatedByPrintingAt)
         : '';
 
       const htmlContent = `
       <html>
       <head>
           <style>
-          body { font-family: Arial, sans-serif; }
+          body { font-family: Arial, sans-serif; margin-top: 60px; }
           h1 { text-align: center; color: #125D9F; }
           .section { border: 2px solid #125D9F; border-radius: 8px; margin-bottom: 18px; padding: 10px 15px; }
           .section-title { background: #125D9F; color: #fff; font-weight: bold; padding: 3px 10px; border-radius: 5px; display: inline-block; margin-bottom: 10px; }
@@ -154,7 +124,7 @@ const AdminJobDetailsScreen = ({route, navigation}) => {
 
       </head>
       <body>    
-
+ <h1>Report</h1> 
         <div class="section">
 
           <div class="section-title">Admin</div>
@@ -162,17 +132,16 @@ const AdminJobDetailsScreen = ({route, navigation}) => {
                 <div class="col"><span class="label">PO No.:</span> <span class="input">${
                   order.poNo || ''
                 }</span></div>
-
-                <div class="col"><span class="label">PO No.:</span> <span class="input">${
-                  order.quotationNo || ''
-                }</span></div>
-
                 <div class="col"><span class="label">Job Date:</span> <span class="input">${jobDateFormatted}</span></div>
           </div>
           <div class="row">
                 <div class="col"><span class="label">Customer Name:</span> <span class="input">${
                   order.customerName || ''
-                }</span></div>                                
+                }</span></div>
+                  <div class="col"><span class="label">Quotation No:</span> <span class="input">${
+                    order.quotationNo || ''
+                  }</span></div>
+              
           </div>
           <div class="row">
                 <div class="col"><span class="label">Job Card no:</span> <span class="input">${
@@ -186,79 +155,58 @@ const AdminJobDetailsScreen = ({route, navigation}) => {
               <div class="col"><span class="label">Job Qty:</span> <span class="input">${
                 order.jobQty || ''
               }</span></div>
-          </div>        
-          <div class="row">
-              <div class="col"><span class="label">Job Creation Time:</span> <span class="input">${jobCreationTime}</span></div>  
-              <div class="col"></div>           
-          </div>          
-            <div class="row time-row">
-            <div class="col"><span class="label">Start time:</span> <span class="input">${startTimeFormatted}</span></div>
+              <div class="col"><span class="label">Product Detail 1:</span> <span class="input">${
+                order.productDetail1 || ''
+              }</span></div>
+           </div>  
+         
+           <div class="row">              
+             <div class="col"><span class="label">Product Detail 2:</span> <span class="input">${
+               order.productDetail2 || ''
+             }</span></div> 
+               <div class="col"><span class="label">Product Detail 3:</span> <span class="input">${
+                 order.productDetail3?.label || ''
+               }</span></div> 
+          </div>     
+            <div class="row">
+               <div class="col"><span class="label">Job Creation Time:</span> <span class="input">${jobCreationTime}</span></div> 
+               <div class="col"><span class="label">Start time:</span> <span class="input">${startTimeFormatted}</span></div> 
+          </div>     
+            <div class="row">
             <div class="col"><span class="label">End time:</span> <span class="input">${endTimeFormatted}</span></div>
             <div class="col"><span class="label">Total time:</span> <span class="input">${totalTimeFormatted}</span></div>
           </div>
-
-        </div>
+              </div>  
+        </div>       
 
         <div class="section">
-          <div class="section-title">Printing</div>
+          <div class="section-title">User</div>
           <div class="row">
-            <div class="col"><span class="label">Printing Start Time:</span> <span class="input">${
-              printingStartTimeFormatted || ''
+            <div class="col"><span class="label">Job Start Time:</span> <span class="input">${
+              startTimeFormatted || ''
             }</span></div>
-            <div class="col"><span class="label">Printing End Time:</span> <span class="input">${
-              printingEndTimeFormatted || ''
+            <div class="col"><span class="label">Job End Time:</span> <span class="input">${
+              endTimeFormatted || ''
             }</span></div>
           </div>
-          <div class="row"><span class="label">Color Seq.</span></div>
-          
-                            <table class="small-table color-seq-table">
-                    <tr>
-                      <td>C : ${order.colorAniloxValues?.C?.value || ''}</td>
-                      <td>M : ${order.colorAniloxValues?.M?.value || ''}</td>
-                      <td>Y : ${order.colorAniloxValues?.Y?.value || ''}</td>
-                      <td>K : ${order.colorAniloxValues?.K?.value || ''}</td>
-                    </tr>
-                    <tr>
-                      <td>Sq1 : ${
-                        order.colorAniloxValues?.Sq1?.value || ''
-                      }</td>
-                      <td>Sq2 : ${
-                        order.colorAniloxValues?.Sq2?.value || ''
-                      }</td>    
-                      <td>Sq3 : ${
-                        order.colorAniloxValues?.Sq3?.value || ''
-                      }</td>
-                      <td>Sq4 : ${
-                        order.colorAniloxValues?.Sq4?.value || ''
-                      }</td>
-                    </tr>
-                  </table>
-
-                <div class="row">
-                  <div class="col"><span class="label">Running Mtrs:</span> <span class="input">${
-                    order.runningMtr || ''
-                  }</span></div>
-                  <div class="col"><span class="label">Paper Product Code:</span> <span class="input">${
-                    order.paperProductCode?.label ||
-                    order.paperProductCode ||
-                    ''
-                  }</span>
-                  </div>
-                </div>
-                 <div class="row">
-                    <div class="col">
-                      <span class="label">Printing Colors:</span>
-                      <span class="input">
-                        ${
-                          order.printingColors &&
-                          order.printingColors.length > 0
-                            ? order.printingColors.join(', ')
-                            : ''
-                        }
-                      </span>
-                    </div>
-                 </div>
-        </div>  
+          <div class="row">
+            <div class="col"><span class="label">Detail1:</span> <span class="input">${
+              order.detail1 || ''
+            }</span></div>
+            <div class="col"><span class="label">Detail2:</span> <span class="input">${
+              order.detail2?.label || ''
+            }</span></div>
+            </div>
+             <div class="row">
+            <div class="col"><span class="label">Detail3:</span> <span class="input">${
+              order.detail3 || ''
+            }</span></div>
+            <div class="col"><span class="label">Detail4:</span> <span class="input">${
+              order.detail4?.label || ''
+            }</span></div>
+            </div>
+          </div>
+        </div>
       </body>
       </html>
     `;
@@ -315,52 +263,19 @@ const AdminJobDetailsScreen = ({route, navigation}) => {
       const jobCreationTime = order.createdAt
         ? formatTimestamp(order.createdAt)
         : '';
-      const startTimeFormatted = order.updatedAt
-        ? formatTimestamp(order.updatedAt)
+      const startTimeFormatted = order.jobStartAt
+        ? formatTimestamp(order.jobStartAt)
         : '';
-      const endTimeFormatted = order.endTime
-        ? formatTimestamp(order.endTime)
+      const endTimeFormatted = order.updatedJobByAt
+        ? formatTimestamp(order.updatedJobByAt)
         : '';
       const totalTimeFormatted =
         totalTime !== null ? formatDuration(totalTime) : '';
+
       const jobDateFormatted = order.jobDate
         ? order.jobDate.toDate().toLocaleDateString()
         : '';
 
-      const printingStartTimeFormatted = order.updatedAt
-        ? formatTimestamp(order.updatedAt)
-        : '';
-      const printingEndTimeFormatted = order.updatedByPrintingAt
-        ? formatTimestamp(order.updatedByPrintingAt)
-        : '';
-      const punchingStartTimeFormatted = order.punchingStartAt
-        ? formatTimestamp(order.punchingStartAt)
-        : '';
-      const punchingEndTimeFormatted = order.updatedByPunchingAt
-        ? formatTimestamp(order.updatedByPunchingAt)
-        : '';
-      const slittingStartTimeFormatted = order.startBySlittingAt
-        ? formatTimestamp(order.startBySlittingAt)
-        : '';
-      const slittingEndTimeFormatted = order.updatedBySlittingAt
-        ? formatTimestamp(order.updatedBySlittingAt)
-        : '';
-
-      const slittingRows =
-        order.slittingData && order.slittingData.length > 0
-          ? order.slittingData
-              .map(
-                item => `
-              <tr>
-                <td>${item.A || ''}</td>
-                <td>${item.B || ''}</td>
-                <td>${item.C || ''}</td>
-              </tr>`,
-              )
-              .join('')
-          : `<tr><td colspan="3">No data available</td></tr>`;
-
-      // ✅ Keep your existing HTML content as-is
       const htmlContent = `
       <html>
       <head>
@@ -426,110 +341,56 @@ const AdminJobDetailsScreen = ({route, navigation}) => {
               <div class="col"><span class="label">Job Qty:</span> <span class="input">${
                 order.jobQty || ''
               }</span></div>
-              <div class="col"><span class="label">Job Creation Time:</span> <span class="input">${jobCreationTime}</span></div>  
-          </div>              
-            <div class="row time-row">
-            <div class="col"><span class="label">Start time:</span> <span class="input">${startTimeFormatted}</span></div>
+              <div class="col"><span class="label">Product Detail 1:</span> <span class="input">${
+                order.productDetail1 || ''
+              }</span></div>
+           </div>  
+         
+           <div class="row">              
+             <div class="col"><span class="label">Product Detail 2:</span> <span class="input">${
+               order.productDetail2 || ''
+             }</span></div> 
+               <div class="col"><span class="label">Product Detail 3:</span> <span class="input">${
+                 order.productDetail3?.label || ''
+               }</span></div> 
+          </div>     
+            <div class="row">
+               <div class="col"><span class="label">Job Creation Time:</span> <span class="input">${jobCreationTime}</span></div> 
+               <div class="col"><span class="label">Start time:</span> <span class="input">${startTimeFormatted}</span></div> 
+          </div>     
+            <div class="row">
             <div class="col"><span class="label">End time:</span> <span class="input">${endTimeFormatted}</span></div>
             <div class="col"><span class="label">Total time:</span> <span class="input">${totalTimeFormatted}</span></div>
           </div>
-
-        </div>
+              </div>  
+        </div>       
 
         <div class="section">
-          <div class="section-title">Printing</div>
+          <div class="section-title">User</div>
           <div class="row">
-            <div class="col"><span class="label">Printing Start Time:</span> <span class="input">${
-              printingStartTimeFormatted || ''
+            <div class="col"><span class="label">Job Start Time:</span> <span class="input">${
+              startTimeFormatted || ''
             }</span></div>
-            <div class="col"><span class="label">Printing End Time:</span> <span class="input">${
-              printingEndTimeFormatted || ''
+            <div class="col"><span class="label">Job End Time:</span> <span class="input">${
+              endTimeFormatted || ''
             }</span></div>
           </div>
-          <div class="row"><span class="label">Color Seq.</span></div>
-          
-          <table class="small-table color-seq-table">
-  <tr>
-    <td>C : ${order.colorAniloxValues?.C?.value || ''}</td>
-    <td>M : ${order.colorAniloxValues?.M?.value || ''}</td>
-    <td>Y : ${order.colorAniloxValues?.Y?.value || ''}</td>
-    <td>K : ${order.colorAniloxValues?.K?.value || ''}</td>
-  </tr>
-  <tr>
-    <td>Sq1 : ${order.colorAniloxValues?.Sq1?.value || ''}</td>
-    <td>Sq2 : ${order.colorAniloxValues?.Sq2?.value || ''}</td>    
-    <td>Sq3 : ${order.colorAniloxValues?.Sq3?.value || ''}</td>
-    <td>Sq4 : ${order.colorAniloxValues?.Sq4?.value || ''}</td>
-  </tr>
-</table>
-
           <div class="row">
-            <div class="col"><span class="label">Running Mtrs:</span> <span class="input">${
-              order.runningMtr || ''
+            <div class="col"><span class="label">Detail1:</span> <span class="input">${
+              order.detail1 || ''
             }</span></div>
-            <div class="col"><span class="label">Paper Product Code:</span> <span class="input">${
-              order.paperProductCode?.label || order.paperProductCode || ''
-            }</span>
+            <div class="col"><span class="label">Detail2:</span> <span class="input">${
+              order.detail2?.label || ''
+            }</span></div>
             </div>
-          </div>
-           <div class="row">
-              <div class="col">
-                <span class="label">Printing Colors:</span>
-                <span class="input">
-                  ${
-                    order.printingColors && order.printingColors.length > 0
-                      ? order.printingColors.join(', ')
-                      : ''
-                  }
-                </span>
-              </div>
-         </div>
-        </div>
-
-        <div class="section">
-          <div class="section-title">Punching</div>
-          <div class="row">
-            <div class="col"><span class="label">Punching Start Time:</span> <span class="input">${
-              punchingStartTimeFormatted || ''
+             <div class="row">
+            <div class="col"><span class="label">Detail3:</span> <span class="input">${
+              order.detail3 || ''
             }</span></div>
-            <div class="col"><span class="label">Punching End Time:</span> <span class="input">${
-              punchingEndTimeFormatted || ''
+            <div class="col"><span class="label">Detail4:</span> <span class="input">${
+              order.detail4?.label || ''
             }</span></div>
-          </div>
-          <div class="row">
-            <div class="col"><span class="label">Paper Code:</span> <span class="input">${
-              order.paperCode || ''
-            }</span></div>
-            <div class="col"><span class="label">Running Mtrs:</span> <span class="input">${
-              order.runningMtr || ''
-            }</span></div>
-          </div>
-        </div>
-
-        <div class="section">
-          <div class="section-title">Slitting</div>
-          <div class="row">
-            <div class="col"><span class="label">Slitting Start Time:</span> <span class="input">${
-              slittingStartTimeFormatted || ''
-            }</span></div>
-            <div class="col"><span class="label">Slitting End Time:</span> <span class="input">${
-              slittingEndTimeFormatted || ''
-            }</span></div>
-          </div>
-          <div class="subsection">
-            <table border="1">
-              <thead>
-                <tr>
-                  <th>Labels</th>
-                  <th>No of Rolls</th>
-                  <th>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${slittingRows}
-              </tbody>
-            </table>
-
+            </div>
           </div>
         </div>
       </body>
@@ -613,26 +474,38 @@ const AdminJobDetailsScreen = ({route, navigation}) => {
         <Text style={styles.value}>{order.jobQty}</Text>
 
         <Text style={styles.label}>Product Detail1:</Text>
-        <Text style={styles.value}>{order.productDetail1.label}</Text>
+        <Text style={styles.value}>{order.productDetail1}</Text>
 
         <Text style={styles.label}>Product Detail2:</Text>
-        <Text style={styles.value}>{order.productDetail2.label}</Text>
+        <Text style={styles.value}>{order.productDetail2}</Text>
 
         <Text style={styles.label}>Product Detail3:</Text>
-        <Text style={styles.value}>{order.productDetail3.label}</Text>
+        <Text style={styles.value}>{order.productDetail3?.label || ''}</Text>
+
+        <Text style={styles.label}>Detail1:</Text>
+        <Text style={styles.value}>{order.detail1 || ''}</Text>
+
+        <Text style={styles.label}>Detail2:</Text>
+        <Text style={styles.value}>{order.detail2?.label || ''}</Text>
+
+        <Text style={styles.label}>Detail3:</Text>
+        <Text style={styles.value}>{order.detail3 || ''}</Text>
+
+        <Text style={styles.label}>Detail4:</Text>
+        <Text style={styles.value}>{order.detail4?.label || ''}</Text>
 
         <Text style={styles.label}>Start Time:</Text>
         <Text style={styles.value}>
-          {order.updatedAt
-            ? formatTimestamp(order.updatedAt)
-            : order.updatedByPunchingAt
-            ? formatTimestamp(order.updatedByPunchingAt)
+          {order.jobStartAt
+            ? formatTimestamp(order.jobStartAt)
             : 'Not started yet'}
         </Text>
 
         <Text style={styles.label}>End Time:</Text>
         <Text style={styles.value}>
-          {order.endTime ? formatTimestamp(order.endTime) : 'Not finished yet'}
+          {order.updatedJobByAt
+            ? formatTimestamp(order.updatedJobByAt)
+            : 'Not finished yet'}
         </Text>
 
         <Text style={styles.label}>Total Time:</Text>
