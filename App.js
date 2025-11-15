@@ -17,6 +17,7 @@ import React, { useEffect } from "react";
 import { Alert } from "react-native";
 import StackNavigation from "./src/navigation/StackNavigation";
 import { firebase } from "@react-native-firebase/app"; // ✅ FIXED import
+import { NotificationProvider } from "./src/context/NotificationContext";
 
 const App = () => {
   useEffect(() => {
@@ -28,7 +29,12 @@ const App = () => {
     }
   }, []);
 
-  return <StackNavigation />;
+  // return <StackNavigation />;
+    return (
+    <NotificationProvider>   {/* ✅ WRAP HERE */}
+      <StackNavigation />
+    </NotificationProvider>
+  );
 };
 
 export default App;

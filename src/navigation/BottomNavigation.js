@@ -1,5 +1,5 @@
-import React from 'react';
-import {Image} from 'react-native';
+import React, {useContext} from 'react';
+import {Image, View} from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import HomeScreen from '../screens/HomeScreen';
@@ -12,6 +12,8 @@ import NotificationIcon from '../assets/images/notificationBottomImg.png';
 import NotificationScreen from '../screens/NotificationScreen';
 import User1HomeScreen from '../screens/User1HomeScreen';
 import User1JobDetailScreen from '../screens/User1JobDetailScreen';
+
+import {NotificationContext} from '../context/NotificationContext'; // ✅ ADD THIS
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -37,6 +39,8 @@ const userStack = () => (
 const BottomNavigation = ({route}) => {
   const role = route?.params?.role ?? 'Admin';
 
+  const {hasNew} = useContext(NotificationContext); // ✅ READ GLOBAL BADGE STATE
+
   const HomeComponent =
     role === 'Admin' ? AdminStack : role === 'user' ? userStack : AdminStack;
 
@@ -50,15 +54,33 @@ const BottomNavigation = ({route}) => {
           else if (route.name === 'Notifications') icon = NotificationIcon;
 
           return (
-            <Image
-              source={icon}
-              style={{
-                width: 24,
-                height: 24,
-                tintColor: focused ? '#007bff' : 'gray',
-              }}
-              resizeMode="contain"
-            />
+            <View>
+              {/* MAIN ICON */}
+              <Image
+                source={icon}
+                style={{
+                  width: 24,
+                  height: 24,
+                  tintColor: focused ? '#007bff' : 'gray',
+                }}
+                resizeMode="contain"
+              />
+
+              {/* 🔴 BADGE DOT (ONLY FOR NOTIFICATIONS TAB) */}
+              {route.name === 'Notifications' && hasNew && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    right: -2,
+                    top: -2,
+                    width: 10,
+                    height: 10,
+                    backgroundColor: 'red',
+                    borderRadius: 5,
+                  }}
+                />
+              )}
+            </View>
           );
         },
         tabBarHideOnKeyboard: true,
@@ -66,15 +88,13 @@ const BottomNavigation = ({route}) => {
         tabBarInactiveTintColor: 'gray',
         headerShown: false,
       })}>
-      {/* Home Tab */}
       <Tab.Screen name="Home" component={HomeComponent} />
 
-      {/* 👇 SHOW NOTIFICATION TAB ONLY IF ROLE = 'user' */}
+      {/* Notifications only for user */}
       {role === 'user' && (
         <Tab.Screen name="Notifications" component={NotificationScreen} />
       )}
 
-      {/* Profile Tab */}
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );
