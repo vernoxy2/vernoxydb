@@ -84,7 +84,7 @@ const CustomHeader = ({
       )}
       {showHeadingSection2Container && (
         <View style={styles.headingSection2Container}>
-          {showHeaderBtn ? (
+          {/* {showHeaderBtn ? (
             <CustomButton
               style={styles.btnContainer}
               title={btnHeading}
@@ -93,16 +93,29 @@ const CustomHeader = ({
             />
           ) : (
             <View></View>
-          )}
-          {/* {role && role.toLowerCase() === 'admin' ? (<>HELLO</>) : (<>HII</>)}
-          {showHeaderDropDown && (
-            <CustomDropdown
-              data={options}
-              onSelect={handleSelect}
-              placeholder={'All Jobs'}
-              showIcon={true}
-            />
           )} */}
+          {/* Main Header Button */}
+          {showHeaderBtn ? (
+            <CustomButton
+              style={styles.btnContainer}
+              title={btnHeading}
+              textStyle={styles.btnText}
+              onPress={onPress}
+            />
+          ) : (
+            <View />
+          )}
+
+          {/* Admin-Only Material In Button */}
+          {role && role.toLowerCase() === 'admin' && (
+            <CustomButton
+              style={styles.materialBtnContainer}
+              title="Material In"
+              textStyle={styles.materialBtnText}
+              onPress={() => navigation.navigate('MaterialIn')}
+            />
+          )}
+
           {role && role.toLowerCase() === 'admin' ? (
             <>
               {showHeaderDropDown && (
@@ -174,7 +187,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     justifyContent: 'center',
     alignItems: 'center',
-    width: '40%',
+    width: '25%',
   },
   btnText: {
     color: '#000',
@@ -189,5 +202,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 10,
     height: 70,
+  },
+  materialBtnContainer: {
+    height: 40,
+    borderRadius: 0,
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '25%',
+    borderWidth: 1,
+    borderColor: '#fff',
+  },
+
+  materialBtnText: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
