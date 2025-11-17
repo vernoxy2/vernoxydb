@@ -228,7 +228,8 @@ const AdminCreateOrder = ({navigation}) => {
           <CustomLabelTextInput
             label="Job Card No :"
             value={jobCardNo}
-            onChangeText={setJobCardNo}
+            // onChangeText={setJobCardNo}
+             editable={false}
           />
           <CustomLabelTextInput
             label="Job Name :"

@@ -1,5 +1,5 @@
-import React from "react";
-import { View, TextInput, Text, StyleSheet } from 'react-native';
+import React from 'react';
+import {View, TextInput, Text, StyleSheet} from 'react-native';
 
 const CustomLabelTextInput = ({
   label,
@@ -7,6 +7,7 @@ const CustomLabelTextInput = ({
   value,
   onChangeText,
   keyboardType = 'default',
+  editable = true,
   numericOnly = false, // 👈 optional flag for numeric filtering
 }) => {
   const handleChange = text => {
@@ -27,6 +28,8 @@ const CustomLabelTextInput = ({
         value={value}
         onChangeText={handleChange}
         keyboardType={keyboardType}
+        editable={editable} // ✅ ADD THIS
+        selectTextOnFocus={false} // optional: avoid selecting text
       />
     </View>
   );

@@ -12,8 +12,8 @@ import NotificationIcon from '../assets/images/notificationBottomImg.png';
 import NotificationScreen from '../screens/NotificationScreen';
 import User1HomeScreen from '../screens/User1HomeScreen';
 import User1JobDetailScreen from '../screens/User1JobDetailScreen';
-
-import {NotificationContext} from '../context/NotificationContext'; // ✅ ADD THIS
+import {NotificationContext} from '../context/NotificationContext';
+import MaterialInn from '../screens/MaterialInn';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -23,6 +23,7 @@ const AdminStack = () => (
     <Stack.Screen name="AdminHome" component={HomeScreen} />
     <Stack.Screen name="AdminJobDetails" component={AdminJobDetailsScreen} />
     <Stack.Screen name="AdminCreateOrder" component={AdminCreateOrder} />
+    <Stack.Screen name="MaterialIn" component={MaterialInn} />
   </Stack.Navigator>
 );
 
