@@ -12,12 +12,14 @@ import {
   Keyboard,
   Image,
   Alert,
+  ScrollView,
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import CustomHeader from '../components/CustomHeader';
 import SearchBar from '../components/SearchBar';
 import DatePicker from 'react-native-date-picker';
-import { NotificationContext } from '../context/NotificationContext';
+import {NotificationContext} from '../context/NotificationContext';
+import {Dimensions} from 'react-native';
 
 const User1HomeScreen = ({navigation}) => {
   const [jobData, setJobData] = useState([]);
@@ -28,33 +30,59 @@ const User1HomeScreen = ({navigation}) => {
   const [toDate, setToDate] = useState(null);
   const [openFrom, setOpenFrom] = useState(false);
   const [openTo, setOpenTo] = useState(false);
-  const { setHasNew } = useContext(NotificationContext);
+  const {setHasNew} = useContext(NotificationContext);
+  const [listHeight, setListHeight] = useState(0);
+
+  const [screenInfo, setScreenInfo] = useState({
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height,
+    isLandscape:
+      Dimensions.get('window').width > Dimensions.get('window').height,
+  });
+
+  const maxTableHeight = screenInfo.isLandscape
+    ? screenInfo.height * (isTablet ? 0.7 : 0.6)
+    : screenInfo.height * (isTablet ? 0.5 : 0.4);
+  const isTablet = screenInfo.width >= 768;
 
   useEffect(() => {
-  // listen for orders and mark badge if any unaccepted exist
-  const unsubscribe = firestore()
-    .collection('orders')
-    .orderBy('createdAt', 'desc')
-    .onSnapshot(
-      snapshot => {
-        const fetchedJobs = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+    const onChange = ({window}) => {
+      setScreenInfo({
+        width: window.width,
+        height: window.height,
+        isLandscape: window.width > window.height,
+      });
+    };
+    const subscription = Dimensions.addEventListener('change', onChange);
+    return () => subscription?.remove();
+  }, []);
 
-        // count unaccepted jobs (only for user role, if you later set role in this screen)
-        const unacceptedCount = fetchedJobs.filter(j => j.accept === false).length;
+  useEffect(() => {
+    // listen for orders and mark badge if any unaccepted exist
+    const unsubscribe = firestore()
+      .collection('orders')
+      .orderBy('createdAt', 'desc')
+      .onSnapshot(
+        snapshot => {
+          const fetchedJobs = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
 
-        setHasNew(unacceptedCount > 0);
-      },
-      error => {
-        console.error('Error listening for badge jobs: ', error);
-      }
-    );
+          // count unaccepted jobs (only for user role, if you later set role in this screen)
+          const unacceptedCount = fetchedJobs.filter(
+            j => j.accept === false,
+          ).length;
 
-  return () => unsubscribe();
-}, [setHasNew]);
+          setHasNew(unacceptedCount > 0);
+        },
+        error => {
+          console.error('Error listening for badge jobs: ', error);
+        },
+      );
 
+    return () => unsubscribe();
+  }, [setHasNew]);
 
   useEffect(() => {
     const unsubscribe = firestore()
@@ -114,7 +142,7 @@ const User1HomeScreen = ({navigation}) => {
       );
     }
 
-     if (fromDate || toDate) {
+    if (fromDate || toDate) {
       filtered = filtered.filter(job => {
         let jobDate;
 
@@ -223,114 +251,198 @@ const User1HomeScreen = ({navigation}) => {
       style={{flex: 1}}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.homeMainContainer}>
-          <CustomHeader
-            showHeadingSection1Container={true}
-            showHeadingTextContainer={true}
-            headingTitle={'User Dashboard'}
-            showHeadingSection2Container={true}
-            btnHeading={'Create New'}
-            showHeaderDropDown={true}
-            onDropdownSelect={value => setFilter(value)}
-          />
-          <View style={styles.homeSubContainer}>
-            <SearchBar
-              placeholder="Search Job"
-              style={styles.searchBarHome}
-              value={searchQuery}
-              onChangeText={text => setSearchQuery(text)}
+        <ScrollView
+          contentContainerStyle={{flexGrow: 1, paddingBottom: 40}}
+          showsVerticalScrollIndicator={true}>
+          <View style={styles.homeMainContainer}>
+            <CustomHeader
+              showHeadingSection1Container={true}
+              showHeadingTextContainer={true}
+              headingTitle={'User Dashboard'}
+              showHeadingSection2Container={true}
+              btnHeading={'Create New'}
+              showHeaderDropDown={true}
+              onDropdownSelect={value => setFilter(value)}
             />
+            <View style={styles.homeSubContainer}>
+              <SearchBar
+                placeholder="Search Job"
+                style={styles.searchBarHome}
+                value={searchQuery}
+                onChangeText={text => setSearchQuery(text)}
+              />
 
-            <View style={styles.dateFilterContainer}>
-              <Pressable
-                onPress={() => setOpenFrom(true)}
-                style={styles.dateFilterButton}>
-                <Text style={styles.dateFilterText}>
-                  {fromDate ? fromDate.toDateString() : 'From Date'}
-                </Text>
-              </Pressable>
+              <View style={styles.dateFilterContainer}>
+                <Pressable
+                  onPress={() => setOpenFrom(true)}
+                  style={styles.dateFilterButton}>
+                  <Text style={styles.dateFilterText}>
+                    {fromDate ? fromDate.toDateString() : 'From Date'}
+                  </Text>
+                </Pressable>
 
-              <Pressable
-                onPress={() => setOpenTo(true)}
-                style={styles.dateFilterButton}>
-                <Text style={styles.dateFilterText}>
-                  {toDate ? toDate.toDateString() : 'To Date'}
-                </Text>
-              </Pressable>
-            </View>
+                <Pressable
+                  onPress={() => setOpenTo(true)}
+                  style={styles.dateFilterButton}>
+                  <Text style={styles.dateFilterText}>
+                    {toDate ? toDate.toDateString() : 'To Date'}
+                  </Text>
+                </Pressable>
+              </View>
 
-            <DatePicker
-              modal
-              open={openFrom}
-              date={fromDate || new Date()}
-              mode="date"
-              maximumDate={new Date()}
-              onConfirm={date => {
-                setOpenFrom(false);
-                setFromDate(date);
-              }}
-              onCancel={() => setOpenFrom(false)}
-            />
+              <DatePicker
+                modal
+                open={openFrom}
+                date={fromDate || new Date()}
+                mode="date"
+                maximumDate={new Date()}
+                onConfirm={date => {
+                  setOpenFrom(false);
+                  setFromDate(date);
+                }}
+                onCancel={() => setOpenFrom(false)}
+              />
 
-            <DatePicker
-              modal
-              open={openTo}
-              date={toDate || new Date()}
-              mode="date"
-              maximumDate={new Date()}
-              minimumDate={fromDate || undefined} // optional: restrict to after fromDate
-              onConfirm={date => {
-                setOpenTo(false);
-                setToDate(date);
-              }}
-              onCancel={() => setOpenTo(false)}
-            />
+              <DatePicker
+                modal
+                open={openTo}
+                date={toDate || new Date()}
+                mode="date"
+                maximumDate={new Date()}
+                minimumDate={fromDate || undefined} // optional: restrict to after fromDate
+                onConfirm={date => {
+                  setOpenTo(false);
+                  setToDate(date);
+                }}
+                onCancel={() => setOpenTo(false)}
+              />
 
-            <View style={styles.tableHeadingTypesContainer}>
-              <Text style={styles.tableHeadingTypesText}>All Jobs</Text>
-            </View>
-            <View>
-              {loading ? (
-                <ActivityIndicator
-                  size="large"
-                  color="#0000ff"
-                  style={{marginTop: 20}}
-                />
-              ) : getFilteredJobs().length > 0 ? (
-                <View style={styles.tableContainer}>
-                  {renderHeader()}
-                  <FlatList
-                    data={getFilteredJobs()}
-                    renderItem={renderItem}
-                    keyExtractor={item => item.id}
-                    contentContainerStyle={{paddingBottom: 20}}
-                    showsVerticalScrollIndicator={true}
-                    nestedScrollEnabled={true}
-                    persistentScrollbar={true}
+              <View style={styles.tableHeadingTypesContainer}>
+                <Text style={styles.tableHeadingTypesText}>All Jobs</Text>
+              </View>
+              {/* <View>
+                {loading ? (
+                  <ActivityIndicator
+                    size="large"
+                    color="#0000ff"
+                    style={{marginTop: 20}}
                   />
-                </View>
-              ) : (
-                <View style={styles.noJobsContainer}>
-                  <Image
-                    source={require('../assets/images/listing.png')}
-                    style={styles.noJobsImage}
-                    resizeMode="contain"
+                ) : getFilteredJobs().length > 0 ? (
+                  <View style={styles.tableContainer}>
+                    {renderHeader()}
+                    <FlatList
+                      data={getFilteredJobs()}
+                      renderItem={renderItem}
+                      keyExtractor={item => item.id}
+                      contentContainerStyle={{paddingBottom: 20}}
+                      showsVerticalScrollIndicator={true}
+                      nestedScrollEnabled={true}
+                      persistentScrollbar={true}
+                    />
+                  </View>
+                ) : (
+                  <View style={styles.noJobsContainer}>
+                    <Image
+                      source={require('../assets/images/listing.png')}
+                      style={styles.noJobsImage}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.noJobsTitle}>No Jobs Available</Text>                   
+                  </View>
+                )}
+              </View> */}
+              <View>
+                {loading ? (
+                  <ActivityIndicator
+                    size="large"
+                    color="#0000ff"
+                    style={{marginTop: 20}}
                   />
-                  <Text style={styles.noJobsTitle}>No Jobs Available</Text>
-                  {/* <Text style={styles.noJobsSubtitle}>
-                    You're all caught up! {'\n'}No such jobs are available.
-                  </Text> */}
-                </View>
-              )}
+                ) : getFilteredJobs().length > 0 ? (
+                  <View
+                    key={screenInfo.width} // ✅ re-renders when width changes
+                    style={[
+                      styles.tableContainer,
+                      {
+                        width: isTablet ? '90%' : '100%',
+                        alignSelf: isTablet ? 'center' : 'stretch',
+                        maxHeight: screenInfo.isLandscape
+                          ? screenInfo.height * (isTablet ? 0.7 : 0.6)
+                          : screenInfo.height * (isTablet ? 0.5 : 0.4),
+                      },
+                    ]}>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={true}
+                      contentContainerStyle={{
+                        justifyContent: isTablet ? 'center' : 'flex-start',
+                        width: isTablet ? '100%' : 'auto',
+                        flexDirection: 'column',
+                        minWidth: 600, // ✅ Ensures all 6 columns fit
+                        alignItems: 'flex-start',
+                      }}>
+                      <View
+                        style={[
+                          styles.tableContainer1,
+                          {
+                            maxHeight: screenInfo.isLandscape
+                              ? screenInfo.height * (isTablet ? 0.7 : 0.6)
+                              : screenInfo.height * (isTablet ? 0.5 : 0.4),
+                          },
+                        ]}>
+                        {renderHeader()}
+                        <FlatList
+                          data={getFilteredJobs()}
+                          renderItem={renderItem}
+                          keyExtractor={item => item.id}
+                          contentContainerStyle={{paddingBottom: 20}}
+                          showsVerticalScrollIndicator={true}
+                          nestedScrollEnabled={true}
+                          persistentScrollbar={true}
+                          extraData={screenInfo.width}
+                          // onContentSizeChange={(w, h) => setListHeight(h)}
+                          onContentSizeChange={(w, h) => {
+                            // Only update if height difference > 5px
+                            setListHeight(prev =>
+                              Math.abs(prev - h) > 5 ? h : prev,
+                            );
+                          }}
+                          style={{
+                            maxHeight: maxTableHeight,
+                            height:
+                              listHeight < maxTableHeight
+                                ? listHeight
+                                : maxTableHeight,
+                          }}
+                        />
+                      </View>
+                    </ScrollView>
+                  </View>
+                ) : (
+                  <View style={styles.noJobsContainer}>
+                    <Image
+                      source={require('../assets/images/listing.png')}
+                      style={styles.noJobsImage}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.noJobsTitle}>No Jobs Available</Text>
+                    <Text style={styles.noJobsSubtitle}>
+                      You're all caught up! {'\n'}No such jobs are available.
+                    </Text>
+                  </View>
+                )}
+              </View>
             </View>
           </View>
-        </View>
+        </ScrollView>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
 };
 
 export default User1HomeScreen;
+const screen = Dimensions.get('window');
+const isTablet = screen.width > 768;
 
 const styles = StyleSheet.create({
   // Your existing styles
@@ -361,8 +473,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Lato-Regular',
   },
   tableContainer: {
-    // flex: 1,
-    maxHeight: 340,
+    minWidth: '100%',
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 10,
@@ -371,6 +482,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 5,
+    backgroundColor: '#fff',
+    alignSelf: 'center',
+    width: isTablet ? '90%' : '100%',
+  },
+    tableContainer1: {
+    maxHeight: '100%',
+    minWidth: '100%',
     backgroundColor: '#fff',
   },
   row: {
