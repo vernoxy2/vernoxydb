@@ -107,14 +107,14 @@ const CustomHeader = ({
           )}
 
           {/* Admin-Only Material In Button */}
-          {role && role.toLowerCase() === 'admin' && (
+          {/* {role && role.toLowerCase() === 'admin' && (
             <CustomButton
               style={styles.materialBtnContainer}
               title="Material In"
               textStyle={styles.materialBtnText}
               onPress={() => navigation.navigate('MaterialIn')}
             />
-          )}
+          )} */}
 
           {role && role.toLowerCase() === 'admin' ? (
             <>
@@ -187,7 +187,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     justifyContent: 'center',
     alignItems: 'center',
-    width: '25%',
+    width: '30%',
   },
   btnText: {
     color: '#000',
