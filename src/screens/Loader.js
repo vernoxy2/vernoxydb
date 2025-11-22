@@ -12,7 +12,7 @@ const Loader = ({ visible = false }) => {
       statusBarTranslucent
     >
       <View style={styles.overlay}>
-        <ActivityIndicator size="large" color="#3668B1" />
+        <ActivityIndicator size="large" color="#125D9F" />
       </View>
     </Modal>
   );

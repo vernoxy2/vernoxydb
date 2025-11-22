@@ -160,7 +160,7 @@ const PunchingHomeScreen = ({navigation}) => {
           item.punchingStatus === 'completed'
             ? styles.completedStatus
             : item.punchingStatus === 'started'
-            ? {color: '#3668B1'}
+            ? {color: '#125D9F'}
             : styles.pendingStatus,
         ]}>
         {item.punchingStatus === 'started'
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 10,
   },
   header: {
-    backgroundColor: '#3668B1',
+    backgroundColor: '#125D9F',
   },
   cellHeading: {
     width: 80,

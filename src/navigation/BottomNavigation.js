@@ -1,128 +1,38 @@
-// import React from 'react';
-// import {Image} from 'react-native';
-// import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-// import OperatorHomeScreen from '../screens/OperatorHomeScreen';
-// import NotificationScreen from '../screens/NotificationScreen';
-// import ProfileScreen from '../screens/ProfileScreen';
-
-// import homeIcon from '../assets/images/homeBottomImg.png';
-// import notificationIcon from '../assets/images/notificationBottomImg.png';
-// import profileIcon from '../assets/images/profileBottomImg.png';
-// import HomeScreen from '../screens/HomeScreen';
-// import PunchingHomeScreen from '../screens/PunchingHomeScreen';
-// import SlittingHomeScreen from '../screens/SlittingHomeScreen';
-
-// const Tab = createBottomTabNavigator();
-
-// const BottomNavigation = ({route}) => {
-//   const role = route?.params?.role ?? 'admin';
-
-//   const HomeComponent =
-//     role === 'Admin'
-//       ? HomeScreen
-//       : role === 'Printing'
-//       ? OperatorHomeScreen
-//       : role === 'Punching'
-//       ? PunchingHomeScreen
-//       : role === 'Slitting'
-//       ? SlittingHomeScreen // Add the component for 'slitting'
-//       : null; // If there's no matching role, you can set a default or return null.
-
-//   return (
-//     <Tab.Navigator
-//       screenOptions={({route}) => ({
-//         tabBarIcon: ({focused}) => {
-//           let icon;
-
-//           if (route.name === 'Home') {
-//             icon = homeIcon;
-//           } else if (route.name === 'Notifications') {
-//             icon = notificationIcon;
-//           } else if (route.name === 'Profile') {
-//             icon = profileIcon;
-//           }
-
-//           return (
-//             <Image
-//               source={icon}
-//               style={{
-//                 width: 24,
-//                 height: 24,
-//                 tintColor: focused ? '#007bff' : 'gray',
-//               }}
-//               resizeMode="contain"
-//             />
-//           );
-//         },
-//         tabBarHideOnKeyboard: true,
-//         tabBarActiveTintColor: '#007bff',
-//         tabBarInactiveTintColor: 'gray',
-//         headerShown: false,
-//       })}>
-//       <Tab.Screen name="Home" component={HomeComponent} />
-//       {/* <Tab.Screen name="Notifications" component={NotificationScreen} /> */}
-//       <Tab.Screen name="Profile" component={ProfileScreen} />
-//     </Tab.Navigator>
-//   );
-// };
-
-// export default BottomNavigation;
-
-import React from 'react';
-import {Image} from 'react-native';
+import React, {useContext} from 'react';
+import {Image, View} from 'react-native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-
 import HomeScreen from '../screens/HomeScreen';
-import OperatorHomeScreen from '../screens/OperatorHomeScreen';
-import PunchingHomeScreen from '../screens/PunchingHomeScreen';
-import SlittingHomeScreen from '../screens/SlittingHomeScreen';
 import AdminJobDetailsScreen from '../screens/AdminJobDetailsScreen';
-import PunchingJobDetailsScreen from '../screens/PunchingJobDetailScreen';
-import SlittingJobDetailsScreen from '../screens/SlittingJobDetailsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import OperatorCreateOrder from '../screens/OperatorCreateOrder';
 import AdminCreateOrder from '../screens/AdminCreateOrder';
-
 import homeIcon from '../assets/images/homeBottomImg.png';
 import profileIcon from '../assets/images/profileBottomImg.png';
-// import notificationIcon from '../assets/images/notificationBottomImg.png';
+import NotificationIcon from '../assets/images/notificationBottomImg.png';
+import NotificationScreen from '../screens/NotificationScreen';
+import User1HomeScreen from '../screens/User1HomeScreen';
+import User1JobDetailScreen from '../screens/User1JobDetailScreen';
+import {NotificationContext} from '../context/NotificationContext';
+import MaterialInn from '../screens/MaterialInn';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-/* 🧩 Role-Specific Stacks */
 const AdminStack = () => (
   <Stack.Navigator screenOptions={{headerShown: false}}>
     <Stack.Screen name="AdminHome" component={HomeScreen} />
     <Stack.Screen name="AdminJobDetails" component={AdminJobDetailsScreen} />
     <Stack.Screen name="AdminCreateOrder" component={AdminCreateOrder} />
+    <Stack.Screen name="MaterialIn" component={MaterialInn} />
   </Stack.Navigator>
 );
 
-const PrintingStack = () => (
+const userStack = () => (
   <Stack.Navigator screenOptions={{headerShown: false}}>
-    <Stack.Screen name="PrintingHome" component={OperatorHomeScreen} />
-    <Stack.Screen name="OperatorCreateOrder" component={OperatorCreateOrder} />
-  </Stack.Navigator>
-);
-
-const PunchingStack = () => (
-  <Stack.Navigator screenOptions={{headerShown: false}}>
-    <Stack.Screen name="PunchingHomeScreen" component={PunchingHomeScreen} />
+    <Stack.Screen name="User1HomeScreen" component={User1HomeScreen} />
     <Stack.Screen
-      name="PunchingJobDetailsScreen"
-      component={PunchingJobDetailsScreen}
-    />
-  </Stack.Navigator>
-);
-
-const SlittingStack = () => (
-  <Stack.Navigator screenOptions={{headerShown: false}}>
-    <Stack.Screen name="SlittingHomeScreen" component={SlittingHomeScreen} />
-    <Stack.Screen
-      name="SlittingJobDetailsScreen"
-      component={SlittingJobDetailsScreen}
+      name="User1JobDetailScreen"
+      component={User1JobDetailScreen}
     />
   </Stack.Navigator>
 );
@@ -130,17 +40,10 @@ const SlittingStack = () => (
 const BottomNavigation = ({route}) => {
   const role = route?.params?.role ?? 'Admin';
 
-  // Select correct stack based on user role
+  const {hasNew} = useContext(NotificationContext); // ✅ READ GLOBAL BADGE STATE
+
   const HomeComponent =
-    role === 'Admin'
-      ? AdminStack
-      : role === 'Printing'
-      ? PrintingStack
-      : role === 'Punching'
-      ? PunchingStack
-      : role === 'Slitting'
-      ? SlittingStack
-      : AdminStack;
+    role === 'Admin' ? AdminStack : role === 'user' ? userStack : AdminStack;
 
   return (
     <Tab.Navigator
@@ -149,17 +52,36 @@ const BottomNavigation = ({route}) => {
           let icon;
           if (route.name === 'Home') icon = homeIcon;
           else if (route.name === 'Profile') icon = profileIcon;
+          else if (route.name === 'Notifications') icon = NotificationIcon;
 
           return (
-            <Image
-              source={icon}
-              style={{
-                width: 24,
-                height: 24,
-                tintColor: focused ? '#007bff' : 'gray',
-              }}
-              resizeMode="contain"
-            />
+            <View>
+              {/* MAIN ICON */}
+              <Image
+                source={icon}
+                style={{
+                  width: 24,
+                  height: 24,
+                  tintColor: focused ? '#007bff' : 'gray',
+                }}
+                resizeMode="contain"
+              />
+
+              {/* 🔴 BADGE DOT (ONLY FOR NOTIFICATIONS TAB) */}
+              {route.name === 'Notifications' && hasNew && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    right: -2,
+                    top: -2,
+                    width: 10,
+                    height: 10,
+                    backgroundColor: 'red',
+                    borderRadius: 5,
+                  }}
+                />
+              )}
+            </View>
           );
         },
         tabBarHideOnKeyboard: true,
@@ -168,6 +90,12 @@ const BottomNavigation = ({route}) => {
         headerShown: false,
       })}>
       <Tab.Screen name="Home" component={HomeComponent} />
+
+      {/* Notifications only for user */}
+      {role === 'user' && (
+        <Tab.Screen name="Notifications" component={NotificationScreen} />
+      )}
+
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

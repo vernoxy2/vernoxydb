@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
   addButton: {
     height: 50,
     width: '100%',
-    backgroundColor: '#3668B1',
+    backgroundColor: '#125D9F',
     marginVertical: 30,
     alignItems: 'center',
     justifyContent: 'center',
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   completeBtn: {
-    backgroundColor: '#3668B1',
+    backgroundColor: '#125D9F',
     height: 50,
     width: '100%',
   },

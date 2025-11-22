@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useContext} from 'react';
 import {
   View,
   Text,
@@ -11,15 +11,17 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Image,
+  Alert,
   ScrollView,
 } from 'react-native';
 import firestore from '@react-native-firebase/firestore';
 import CustomHeader from '../components/CustomHeader';
 import SearchBar from '../components/SearchBar';
 import DatePicker from 'react-native-date-picker';
+import {NotificationContext} from '../context/NotificationContext';
 import {Dimensions} from 'react-native';
 
-const HomeScreen = ({navigation}) => {
+const User1HomeScreen = ({navigation}) => {
   const [jobData, setJobData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('allJobs');
@@ -28,6 +30,7 @@ const HomeScreen = ({navigation}) => {
   const [toDate, setToDate] = useState(null);
   const [openFrom, setOpenFrom] = useState(false);
   const [openTo, setOpenTo] = useState(false);
+  const {setHasNew} = useContext(NotificationContext);
   const [listHeight, setListHeight] = useState(0);
 
   const [screenInfo, setScreenInfo] = useState({
@@ -53,6 +56,33 @@ const HomeScreen = ({navigation}) => {
     const subscription = Dimensions.addEventListener('change', onChange);
     return () => subscription?.remove();
   }, []);
+
+  useEffect(() => {
+    // listen for orders and mark badge if any unaccepted exist
+    const unsubscribe = firestore()
+      .collection('orders')
+      .orderBy('createdAt', 'desc')
+      .onSnapshot(
+        snapshot => {
+          const fetchedJobs = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+
+          // count unaccepted jobs (only for user role, if you later set role in this screen)
+          const unacceptedCount = fetchedJobs.filter(
+            j => j.accept === false,
+          ).length;
+
+          setHasNew(unacceptedCount > 0);
+        },
+        error => {
+          console.error('Error listening for badge jobs: ', error);
+        },
+      );
+
+    return () => unsubscribe();
+  }, [setHasNew]);
 
   useEffect(() => {
     const unsubscribe = firestore()
@@ -93,7 +123,6 @@ const HomeScreen = ({navigation}) => {
           (job.jobCardNo && job.jobCardNo.toLowerCase().includes(query)) ||
           (job.customerName &&
             job.customerName.toLowerCase().includes(query)) ||
-          (job.jobName && job.jobName.toLowerCase().includes(query)) ||
           (() => {
             if (!job.jobDate) return false;
             let jobDateObj;
@@ -112,34 +141,6 @@ const HomeScreen = ({navigation}) => {
           })(),
       );
     }
-
-    // if (fromDate || toDate) {
-    //   filtered = filtered.filter(job => {
-    //     let jobDate;
-
-    //     if (job.jobDate?.toDate) {
-    //       jobDate = job.jobDate.toDate();
-    //     } else if (job.jobDate?._seconds) {
-    //       jobDate = new Date(job.jobDate._seconds * 1000);
-    //     } else if (typeof job.jobDate === 'string') {
-    //       jobDate = new Date(job.jobDate);
-    //     } else {
-    //       jobDate = job.jobDate;
-    //     }
-
-    //     if (!(jobDate instanceof Date) || isNaN(jobDate)) return false;
-
-    //     // Adjusted To-Date (end of day)
-    //     const adjustedToDate = toDate
-    //       ? new Date(toDate.setHours(23, 59, 59, 999))
-    //       : null;
-
-    //     if (fromDate && jobDate < fromDate) return false;
-    //     if (adjustedToDate && jobDate > adjustedToDate) return false;
-
-    //     return true;
-    //   });
-    // }
 
     if (fromDate || toDate) {
       filtered = filtered.filter(job => {
@@ -193,6 +194,13 @@ const HomeScreen = ({navigation}) => {
       });
     }
 
+    // ✅ Only accepted jobs
+    filtered = filtered.filter(job => job.accept === true);
+
+    // ❌ Exclude completed jobs
+    filtered = filtered.filter(
+      job => job.jobStatus?.toLowerCase() !== 'completed',
+    );
     return filtered;
   };
 
@@ -200,22 +208,19 @@ const HomeScreen = ({navigation}) => {
     <View style={[styles.row, styles.header]}>
       <Text style={styles.cellHeading}>Job Card No</Text>
       <Text style={styles.cellHeading}>Job Name</Text>
-      <Text style={styles.cellHeading}>Customer Name</Text>
       <Text style={styles.cellHeading}>Date</Text>
       <Text style={styles.cellHeading}>Status</Text>
-      <Text style={styles.cellHeading}>Action</Text>
     </View>
   );
 
   const renderItem = ({item}) => (
     <Pressable
-      onPress={() =>
-        navigation.navigate('AdminJobDetailsScreen', {order: item})
-      }
+      onPress={() => {
+        navigation.navigate('User1JobDetailScreen', {order: item});
+      }}
       style={styles.row}>
       <Text style={styles.cell}>{item.jobCardNo}</Text>
       <Text style={styles.cell}>{item.jobName}</Text>
-      <Text style={styles.cell}>{item.customerName}</Text>
       <Text style={styles.cell}>
         {item.jobDate
           ? item.jobDate.toDate
@@ -223,15 +228,6 @@ const HomeScreen = ({navigation}) => {
             : new Date(item.jobDate._seconds * 1000).toDateString()
           : ''}
       </Text>
-      {/* <Text
-        style={[
-          styles.statusCell,
-          item.jobStatus?.toLowerCase() === 'completed'
-            ? styles.completedStatus
-            : styles.pendingStatus,
-        ]}>
-        {item.jobStatus}
-      </Text> */}
       <Text
         style={[
           styles.statusCell,
@@ -247,27 +243,6 @@ const HomeScreen = ({navigation}) => {
           ? 'Started'
           : 'Pending'}
       </Text>
-      <View
-        style={[
-          styles.cell,
-          {width: 80, alignItems: 'center', justifyContent: 'center'},
-        ]}>
-        {item.jobStatus?.toLowerCase() !== 'completed' && (
-          <Pressable
-            pointerEvents="box-only"
-            onStartShouldSetResponder={() => true}
-            onPress={e => {
-              e.stopPropagation();
-              navigation.navigate('AdminCreateOrder', {
-                id: item.id,
-                isEdit: true,
-              });
-            }}
-            style={styles.editButton}>
-            <Text style={styles.editText}>Edit</Text>
-          </Pressable>
-        )}
-      </View>
     </Pressable>
   );
 
@@ -283,10 +258,8 @@ const HomeScreen = ({navigation}) => {
             <CustomHeader
               showHeadingSection1Container={true}
               showHeadingTextContainer={true}
-              headingTitle={'Dashboard'}
+              headingTitle={'User Dashboard'}
               showHeadingSection2Container={true}
-              onPress={() => navigation.navigate('AdminCreateOrder')}
-              showHeaderBtn={true}
               btnHeading={'Create New'}
               showHeaderDropDown={true}
               onDropdownSelect={value => setFilter(value)}
@@ -329,6 +302,7 @@ const HomeScreen = ({navigation}) => {
                 }}
                 onCancel={() => setOpenFrom(false)}
               />
+
               <DatePicker
                 modal
                 open={openTo}
@@ -347,36 +321,36 @@ const HomeScreen = ({navigation}) => {
                 <Text style={styles.tableHeadingTypesText}>All Jobs</Text>
               </View>
               {/* <View>
-              {loading ? (
-                <ActivityIndicator
-                  size="large"
-                  color="#0000ff"
-                  style={{marginTop: 20}}
-                />
-              ) : getFilteredJobs().length > 0 ? (
-                <View style={styles.tableContainer}>
-                  {renderHeader()}
-                  <FlatList
-                    data={getFilteredJobs()}
-                    renderItem={renderItem}
-                    keyExtractor={item => item.id}
-                    contentContainerStyle={{paddingBottom: 20}}
-                    showsVerticalScrollIndicator={true}
-                    nestedScrollEnabled={true}
-                    persistentScrollbar={true}
+                {loading ? (
+                  <ActivityIndicator
+                    size="large"
+                    color="#0000ff"
+                    style={{marginTop: 20}}
                   />
-                </View>
-              ) : (
-                <View style={styles.noJobsContainer}>
-                  <Image
-                    source={require('../assets/images/listing.png')}
-                    style={styles.noJobsImage}
-                    resizeMode="contain"
-                  />
-                  <Text style={styles.noJobsTitle}>No Jobs Available</Text>            
-                </View>
-              )}
-            </View> */}
+                ) : getFilteredJobs().length > 0 ? (
+                  <View style={styles.tableContainer}>
+                    {renderHeader()}
+                    <FlatList
+                      data={getFilteredJobs()}
+                      renderItem={renderItem}
+                      keyExtractor={item => item.id}
+                      contentContainerStyle={{paddingBottom: 20}}
+                      showsVerticalScrollIndicator={true}
+                      nestedScrollEnabled={true}
+                      persistentScrollbar={true}
+                    />
+                  </View>
+                ) : (
+                  <View style={styles.noJobsContainer}>
+                    <Image
+                      source={require('../assets/images/listing.png')}
+                      style={styles.noJobsImage}
+                      resizeMode="contain"
+                    />
+                    <Text style={styles.noJobsTitle}>No Jobs Available</Text>                   
+                  </View>
+                )}
+              </View> */}
               <View>
                 {loading ? (
                   <ActivityIndicator
@@ -466,9 +440,9 @@ const HomeScreen = ({navigation}) => {
   );
 };
 
-export default HomeScreen;
+export default User1HomeScreen;
 const screen = Dimensions.get('window');
-const isTablet = screen.width > 768; // Adjust breakpoint if needed
+const isTablet = screen.width > 768;
 
 const styles = StyleSheet.create({
   // Your existing styles
@@ -512,7 +486,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     width: isTablet ? '90%' : '100%',
   },
-  tableContainer1: {
+    tableContainer1: {
     maxHeight: '100%',
     minWidth: '100%',
     backgroundColor: '#fff',
@@ -606,27 +580,5 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 14,
     fontFamily: 'Lato-Regular',
-  },
-  editButton: {
-    backgroundColor: '#3668B1',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 60,
-  },
-  editText: {
-    color: '#fff',
-    fontSize: 12,
-    fontFamily: 'Lato-Bold',
-  },
-  editButtonContainer: {
-    width: 80,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#3668B1', // ✅ visible color
-    paddingVertical: 8,
-    borderRadius: 6,
   },
 });

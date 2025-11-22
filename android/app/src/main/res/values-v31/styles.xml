@@ -4,7 +4,7 @@
         <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
 
     
-        <item name="android:windowSplashScreenBackground">#3668B1</item>
+        <item name="android:windowSplashScreenBackground">#125D9F</item>
         <item name="android:windowSplashScreenAnimatedIcon">@null</item>
     </style>
 </resources> -->
@@ -21,4 +21,4 @@
     </style>
 </resources>
  
- 
+  

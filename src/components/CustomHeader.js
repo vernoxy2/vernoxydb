@@ -23,10 +23,8 @@ const CustomHeader = ({
 }) => {
   const options = [
     {label: 'All Jobs', value: 'allJobs'},
-    {label: 'Printing', value: 'printingJobs'},
-    {label: 'Punching', value: 'punchingJobs'},
-    {label: 'Slitting ', value: 'slittingJobs'},
     {label: 'Pending ', value: 'Pending'},
+    {label: 'Started ', value: 'Started'},
     {label: 'Completed ', value: 'completed'},
   ];
 
@@ -86,7 +84,7 @@ const CustomHeader = ({
       )}
       {showHeadingSection2Container && (
         <View style={styles.headingSection2Container}>
-          {showHeaderBtn ? (
+          {/* {showHeaderBtn ? (
             <CustomButton
               style={styles.btnContainer}
               title={btnHeading}
@@ -95,16 +93,29 @@ const CustomHeader = ({
             />
           ) : (
             <View></View>
+          )} */}
+          {/* Main Header Button */}
+          {showHeaderBtn ? (
+            <CustomButton
+              style={styles.btnContainer}
+              title={btnHeading}
+              textStyle={styles.btnText}
+              onPress={onPress}
+            />
+          ) : (
+            <View />
           )}
-          {/* {role && role.toLowerCase() === 'admin' ? (<>HELLO</>) : (<>HII</>)}
-          {showHeaderDropDown && (
-            <CustomDropdown
-              data={options}
-              onSelect={handleSelect}
-              placeholder={'All Jobs'}
-              showIcon={true}
+
+          {/* Admin-Only Material In Button */}
+          {/* {role && role.toLowerCase() === 'admin' && (
+            <CustomButton
+              style={styles.materialBtnContainer}
+              title="Material In"
+              textStyle={styles.materialBtnText}
+              onPress={() => navigation.navigate('MaterialIn')}
             />
           )} */}
+
           {role && role.toLowerCase() === 'admin' ? (
             <>
               {showHeaderDropDown && (
@@ -132,7 +143,7 @@ export default CustomHeader;
 const styles = StyleSheet.create({
   loginTopContainer: {
     height: '25%',
-    backgroundColor: '#3668B1',
+    backgroundColor: '#125D9F',
     borderBottomLeftRadius: 40,
     borderBottomRightRadius: 40,
     alignItems: 'center',
@@ -176,7 +187,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     justifyContent: 'center',
     alignItems: 'center',
-    width: '40%',
+    width: '30%',
   },
   btnText: {
     color: '#000',
@@ -191,5 +202,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginVertical: 10,
     height: 70,
+  },
+  materialBtnContainer: {
+    height: 40,
+    borderRadius: 0,
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '25%',
+    borderWidth: 1,
+    borderColor: '#fff',
+  },
+
+  materialBtnText: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
